@@ -14,9 +14,13 @@ def update_conflicts():
         with sqlite3.connect('data/database.db') as conn:
             cursor = conn.cursor()
             
-            # Создаем таблицу конфликтов
+            # Удаляем старую таблицу если существует
+            cursor.execute("DROP TABLE IF EXISTS conflicts")
+            print("🗑️ Удалили старую таблицу conflicts")
+            
+            # Создаем новую таблицу конфликтов с правильной структурой
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS conflicts (
+                CREATE TABLE conflicts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     question1_id INTEGER NOT NULL,
                     answer1_id INTEGER NOT NULL, 
@@ -40,10 +44,7 @@ def update_conflicts():
                     answer5_text TEXT
                 )
             """)
-            
-            # Очищаем таблицу
-            cursor.execute("DELETE FROM conflicts")
-            print("🗑️ Очистили старые конфликты")
+            print("✅ Создана новая таблица conflicts с поддержкой 5 связок")
             
             # Переносим данные
             conflicts_added = 0
