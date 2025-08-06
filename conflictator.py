@@ -50,7 +50,9 @@ class ConflictDetector:
             cursor.execute("""
                 SELECT id, question1_id, answer1_id, question1_text, answer1_text,
                        question2_id, answer2_id, question2_text, answer2_text,
-                       question3_id, answer3_id, question3_text, answer3_text
+                       question3_id, answer3_id, question3_text, answer3_text,
+                       question4_id, answer4_id, question4_text, answer4_text,
+                       question5_id, answer5_id, question5_text, answer5_text
                 FROM conflicts
             """)
             
@@ -62,6 +64,8 @@ class ConflictDetector:
                 q1_id, a1_id = conflict_row[1], conflict_row[2]
                 q2_id, a2_id = conflict_row[5], conflict_row[6]
                 q3_id, a3_id = conflict_row[9], conflict_row[10]
+                q4_id, a4_id = conflict_row[13], conflict_row[14]
+                q5_id, a5_id = conflict_row[17], conflict_row[18]
                 
                 conflict = {
                     'id': conflict_id,
@@ -114,6 +118,38 @@ class ConflictDetector:
                         'answer_text': a3_text
                     })
                     conflict['question_ids'].append(q3_id)
+                
+                # Проверяем четвертую пару (опциональная)
+                if q4_id is not None and a4_id is not None:
+                    q4_text, a4_text = conflict_row[15], conflict_row[16]
+                    
+                    user_answer_4 = response_map.get(q4_id)
+                    if user_answer_4 != a4_id:
+                        continue  # Четвертое условие не выполнено
+                    
+                    conflict['questions'].append({
+                        'question_id': q4_id,
+                        'answer_id': a4_id,
+                        'question_text': q4_text,
+                        'answer_text': a4_text
+                    })
+                    conflict['question_ids'].append(q4_id)
+                
+                # Проверяем пятую пару (опциональная)
+                if q5_id is not None and a5_id is not None:
+                    q5_text, a5_text = conflict_row[19], conflict_row[20]
+                    
+                    user_answer_5 = response_map.get(q5_id)
+                    if user_answer_5 != a5_id:
+                        continue  # Пятое условие не выполнено
+                    
+                    conflict['questions'].append({
+                        'question_id': q5_id,
+                        'answer_id': a5_id,
+                        'question_text': q5_text,
+                        'answer_text': a5_text
+                    })
+                    conflict['question_ids'].append(q5_id)
                 
                 # Все условия выполнены - конфликт активен
                 active_conflicts.append(conflict)

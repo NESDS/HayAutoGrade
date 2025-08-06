@@ -329,6 +329,33 @@ class Database:
                 )
             """)
             
+            # Создание таблицы conflicts
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS conflicts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    question1_id INTEGER NOT NULL,
+                    answer1_id INTEGER NOT NULL, 
+                    question1_text TEXT NOT NULL,
+                    answer1_text TEXT NOT NULL,
+                    question2_id INTEGER NOT NULL,
+                    answer2_id INTEGER NOT NULL,
+                    question2_text TEXT NOT NULL,
+                    answer2_text TEXT NOT NULL,
+                    question3_id INTEGER,
+                    answer3_id INTEGER,
+                    question3_text TEXT,
+                    answer3_text TEXT,
+                    question4_id INTEGER,
+                    answer4_id INTEGER,
+                    question4_text TEXT,
+                    answer4_text TEXT,
+                    question5_id INTEGER,
+                    answer5_id INTEGER,
+                    question5_text TEXT,
+                    answer5_text TEXT
+                )
+            """)
+            
             conn.commit()
 
  
