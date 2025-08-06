@@ -1,0 +1,590 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет по опросу - Пользователь 466718085</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .grade-section {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .grade-section.error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        
+        .grade-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        
+        .grade-value {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .grade-range {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        
+        .calculation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .calc-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .calc-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .calc-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .error-details {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .error-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            font-size: 1em;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            border-radius: 2px;
+        }
+        
+        .qa-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .qa-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        
+        .qa-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .qa-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .qa-table tr:hover {
+            background-color: #f8f9ff;
+            transition: background-color 0.3s ease;
+        }
+        
+        .question-id {
+            font-weight: bold;
+            color: #2196F3;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .question-text {
+            color: #333;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        
+        .user-answer {
+            color: #555;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            padding-left: 15px;
+        }
+        
+
+        
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .qa-card {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border-left: 5px solid #2196F3;
+        }
+        
+        .qa-card-header {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .qa-card-number {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 15px;
+        }
+        
+        .qa-card-question {
+            display: inline;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+        
+        .qa-card-body {
+            padding: 20px;
+        }
+        
+        .qa-card-answer-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .qa-card-answer {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #2196F3;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header .subtitle {
+                font-size: 0.95em;
+            }
+            
+            .grade-section {
+                padding: 30px 20px;
+            }
+            
+            .grade-value {
+                font-size: 3em;
+            }
+            
+            .calculation-details {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 15px;
+            }
+            
+            .calc-item {
+                padding: 12px;
+            }
+            
+            .calc-value {
+                font-size: 1.3em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .section-title {
+                font-size: 1.5em;
+            }
+            
+            /* Скрываем таблицу на мобильных */
+            .qa-table {
+                display: none;
+            }
+            
+            /* Показываем карточки на мобильных */
+            .qa-card {
+                display: block;
+            }
+            
+            .error-details {
+                padding: 15px;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.7em;
+            }
+            
+            .grade-value {
+                font-size: 2.5em;
+            }
+            
+            .calculation-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .qa-card {
+                margin-bottom: 15px;
+                border-radius: 12px;
+            }
+            
+            .qa-card-header {
+                padding: 12px 15px;
+            }
+            
+            .qa-card-body {
+                padding: 15px;
+            }
+            
+            .qa-card-number {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+                font-size: 0.8em;
+                margin-right: 10px;
+            }
+            
+            .qa-card-question {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Отчет по опросу</h1>
+            <div class="subtitle">Пользователь #466718085 | Сессия #9 | 06.08.2025 00:15</div>
+        </div>
+        
+        <div class="grade-section error">
+            
+            <div class="grade-title">Ошибка расчета грейда</div>
+            <div class="grade-value">❌</div>
+            <div class="grade-range">Не удалось вычислить результат</div>
+            
+            <div class="error-details">
+                <div class="error-title">Детали ошибки:</div>
+                <div class="error-message">Не удалось вычислить параметр p3</div>
+            </div>
+            
+        </div>
+        
+        <div class="content">
+            <h2 class="section-title">Вопросы и ответы</h2>
+            
+            <!-- Таблица для десктопа -->
+            <table class="qa-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Вопрос</th>
+                        <th>Ваш ответ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr>
+                    <td class="question-id">#1</td>
+                    <td class="question-text">Как называется должность, которую оцениваем?</td>
+                    <td class="user-answer">Руководитель направления</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#8</td>
+                    <td class="question-text">Какой уровень экспертизы и глубины знаний требуется для этой должности?</td>
+                    <td class="user-answer">Разработчик с высшим образованием, опытом от трёх лет, пишущий качественный код, создающий алгоритмы для AI-агентов без глубокого обучения, знающий базы данных PostgreSQL и Qdrant, работающий самостоятельно и творчески, без управленческих функций.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#9</td>
+                    <td class="question-text">Опишите, какой уровень планирования и организации соответствует вашей роли. Какие задачи вы выполняете или контролируете?</td>
+                    <td class="user-answer">Самостоятельно решаю средние задачи, разрабатываю алгоритмы, даю поручения младшим сотрудникам. Не занимаюсь стратегией, управлением крупными проектами и межподразделенческим взаимодействием.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#10</td>
+                    <td class="question-text">Опишите уровень взаимодействия с людьми, требуемый для этой должности.</td>
+                    <td class="user-answer">Уровень взаимодействия включает убеждение, аргументирование позиции и проведение переговоров.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#11</td>
+                    <td class="question-text">Какая степень свободы мышления требуется для решения задач на этой должности?</td>
+                    <td class="user-answer">Степень свободы высокая внутри команды — самостоятельный выбор методов работы, предложения улучшений и изменений процессов, однако полномочия ограничены пределами команды, глобальные преобразования компании не входят в компетенцию.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#12</td>
+                    <td class="question-text">Какой уровень креативности и оригинальности мышления требуется для решения задач на этой должности?</td>
+                    <td class="user-answer">Требуется высокий уровень креативности и оригинальности мышления для разработки инновационных решений и новых подходов.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#13</td>
+                    <td class="question-text">Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+
+Например:
+Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</td>
+                    <td class="user-answer">Разработчик ПО: экономия зарплатных расходов на 100 млн рублей в год.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#14</td>
+                    <td class="question-text">Укажите степень влияния должности на определенные конечные результаты</td>
+                    <td class="user-answer">Разделяю ответственность за результат работы команды, но не контролирую бюджет.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#16</td>
+                    <td class="question-text">Опишите, пожалуйста, степень ваших полномочий при принятии решений в должности, указав основные особенности контроля и уровень самостоятельности (например, постоянный контроль с подробными инструкциями, частичная самостоятельность с возможностью менять приоритеты, стратегический уровень ответственности и т.п.).</td>
+                    <td class="user-answer">Полномочия:
+- Инструкции — общие.
+- Самостоятельное принятие решений и определение приоритетов.
+- Контроль осуществляет руководитель отдела.
+- Полная ответственность за результаты работы.</td>
+                </tr>
+            
+                </tbody>
+            </table>
+            
+            <!-- Карточки для мобильных устройств -->
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">1</span>
+                        <span class="qa-card-question">Как называется должность, которую оцениваем?</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Руководитель направления</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">8</span>
+                        <span class="qa-card-question">Какой уровень экспертизы и глубины знаний требуется для этой должности?</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Разработчик с высшим образованием, опытом от трёх лет, пишущий качественный код, создающий алгоритмы для AI-агентов без глубокого обучения, знающий базы данных PostgreSQL и Qdrant, работающий самостоятельно и творчески, без управленческих функций.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">9</span>
+                        <span class="qa-card-question">Опишите, какой уровень планирования и организации соответствует вашей роли. Какие задачи вы выполняете или контролируете?</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Самостоятельно решаю средние задачи, разрабатываю алгоритмы, даю поручения младшим сотрудникам. Не занимаюсь стратегией, управлением крупными проектами и межподразделенческим взаимодействием.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">10</span>
+                        <span class="qa-card-question">Опишите уровень взаимодействия с людьми, требуемый для этой должности.</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Уровень взаимодействия включает убеждение, аргументирование позиции и проведение переговоров.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">11</span>
+                        <span class="qa-card-question">Какая степень свободы мышления требуется для решения задач на этой должности?</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Степень свободы высокая внутри команды — самостоятельный выбор методов работы, предложения улучшений и изменений процессов, однако полномочия ограничены пределами команды, глобальные преобразования компании не входят в компетенцию.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">12</span>
+                        <span class="qa-card-question">Какой уровень креативности и оригинальности мышления требуется для решения задач на этой должности?</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Требуется высокий уровень креативности и оригинальности мышления для разработки инновационных решений и новых подходов.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">13</span>
+                        <span class="qa-card-question">Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+
+Например:
+Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Разработчик ПО: экономия зарплатных расходов на 100 млн рублей в год.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">14</span>
+                        <span class="qa-card-question">Укажите степень влияния должности на определенные конечные результаты</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Разделяю ответственность за результат работы команды, но не контролирую бюджет.</div>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">16</span>
+                        <span class="qa-card-question">Опишите, пожалуйста, степень ваших полномочий при принятии решений в должности, указав основные особенности контроля и уровень самостоятельности (например, постоянный контроль с подробными инструкциями, частичная самостоятельность с возможностью менять приоритеты, стратегический уровень ответственности и т.п.).</span>
+                    </div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer-label">Ваш ответ:</div>
+                        <div class="qa-card-answer">Полномочия:
+- Инструкции — общие.
+- Самостоятельное принятие решений и определение приоритетов.
+- Контроль осуществляет руководитель отдела.
+- Полная ответственность за результаты работы.</div>
+                    </div>
+                </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>Отчет сгенерирован автоматически • HAG MVP System • 06.08.2025 00:15</p>
+        </div>
+    </div>
+</body>
+</html>
+        

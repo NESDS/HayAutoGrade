@@ -1,0 +1,26 @@
+# Python виртуальное окружение
+hag_venv/
+venv/
+env/
+
+# Python кеш
+__pycache__/
+*.pyc
+*.pyo
+
+# База данных (если не нужна в репо)
+*.db
+
+# Временные файлы
+*.tmp
+*.log
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
