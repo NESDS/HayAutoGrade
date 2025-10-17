@@ -206,7 +206,7 @@ class TelegramBot:
             
             # Показываем typing indicator (если есть классификатор)
             if question_data.get('classifier'):
-                await message.answer_chat_action("typing")
+                await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
             
             final_answer = classification_agent.classify_answer(question_data, user_answer, portrait)
             
@@ -232,7 +232,7 @@ class TelegramBot:
             portrait = self.db.get_session_portrait(user_id, session_id)
             
             # Показываем typing indicator
-            await message.answer_chat_action("typing")
+            await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
             
             is_accepted, response_text = verification_agent.process_answer(
                 question_data, user_answer, state['conversation'], portrait
@@ -293,7 +293,7 @@ class TelegramBot:
         portrait = self.db.get_session_portrait(user_id, session_id)
         
         # Показываем typing indicator
-        await message.answer_chat_action("typing")
+        await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
         
         # Генерируем промпт для объяснения конфликта с учетом контекста
         explanation_prompt = detector.generate_conflict_explanation(conflict, portrait)
@@ -797,7 +797,7 @@ class TelegramBot:
             functionality_agent = agents['functionality']
             
             # Показываем typing indicator
-            await message.answer_chat_action("typing")
+            await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
             
             # Генерируем функционал
             generated_functionality = functionality_agent.generate_functionality(portrait)
