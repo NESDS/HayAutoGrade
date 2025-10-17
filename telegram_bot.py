@@ -369,11 +369,39 @@ class TelegramBot:
         
         await message.answer(conflict_details)
         
+        # Выводим техническую информацию о конфликте БЕЗ LLM
+        print("\n" + "="*70)
+        print("📊 ТЕХНИЧЕСКАЯ ИНФОРМАЦИЯ О КОНФЛИКТЕ")
+        print("="*70)
+        print(f"Конфликт ID: {conflict.get('id', 'N/A')}")
+        print(f"Вопросы в конфликте: {conflict['question_ids']}")
+        print()
+        
+        # Выводим детали по каждому вопросу
+        for q_info in conflict['questions']:
+            question_id = q_info['question_id']
+            
+            # Получаем фактический уровень пользователя
+            if question_id in response_map:
+                user_level = response_map[question_id].get('final_answer', '')
+                print(f"Вопрос {question_id}:")
+                print(f"  ├─ Уровень пользователя: {user_level}")
+                print(f"  └─ Краткое описание уровня: {q_info['answer_text'][:80]}...")
+                print()
+        
+        print(f"❌ КОНФЛИКТ: Комбинация уровней {[response_map[q_id].get('final_answer', '?') for q_id in conflict['question_ids']]} несовместима.")
+        print("="*70 + "\n")
+        
         # Показываем typing indicator
         await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
         
         # Генерируем промпт для объяснения конфликта с учетом контекста
         explanation_prompt = detector.generate_conflict_explanation(conflict, portrait)
+        
+        print("🤖 КОНФЛИКТАТОР - Отправляем запрос в LLM для объяснения конфликта...")
+        print("-" * 50)
+        print(explanation_prompt)
+        print("-" * 50 + "\n")
         
         # Получаем объяснение от LLM (используем task_type='explanation' для более креативного ответа)
         messages = [{"role": "user", "content": explanation_prompt}]

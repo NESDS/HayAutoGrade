@@ -37,7 +37,16 @@ class ConflictDetector:
         conflicts = self._find_active_conflicts(response_map)
         
         if conflicts:
-            print(f"⚠️ Найден конфликт: вопросы {conflicts[0]['question_ids']}")
+            # Выводим краткую информацию о найденном конфликте
+            conflict = conflicts[0]  # Берем первый найденный конфликт
+            question_ids = conflict['question_ids']
+            print(f"\n⚠️ ОБНАРУЖЕН КОНФЛИКТ!")
+            print(f"   Вопросы: {question_ids}")
+            
+            # Выводим уровни по каждому вопросу
+            user_levels = [response_map.get(q_id, '?') for q_id in question_ids]
+            print(f"   Уровни пользователя: {user_levels}")
+            print()
         
         return conflicts
     
