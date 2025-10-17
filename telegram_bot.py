@@ -281,8 +281,11 @@ class TelegramBot:
         llm_type = state.get('llm_type', 'gigachat')
         llm = LLMFactory.create_service(llm_type)
         
-        # Генерируем промпт для объяснения конфликта
-        explanation_prompt = detector.generate_conflict_explanation(conflict)
+        # Получаем портрет пользователя для контекста
+        portrait = self.db.get_session_portrait(user_id, session_id)
+        
+        # Генерируем промпт для объяснения конфликта с учетом контекста
+        explanation_prompt = detector.generate_conflict_explanation(conflict, portrait)
         
         # Получаем объяснение от LLM (используем task_type='explanation' для более креативного ответа)
         messages = [{"role": "user", "content": explanation_prompt}]
