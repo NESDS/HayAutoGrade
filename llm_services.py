@@ -11,6 +11,7 @@ from typing import List, Dict
 from config import (
     GIGACHAT_AUTH, GIGACHAT_SCOPE, GIGACHAT_API_URL, GIGACHAT_TOKEN_URL, GIGACHAT_MODEL,
     OPENAI_API_KEY, OPENAI_MODEL, OPENAI_API_URL,
+    OPENAI_USE_PROXY, OPENAI_PROXY_HOST, OPENAI_PROXY_PORT, OPENAI_PROXY_USER, OPENAI_PROXY_PASSWORD,
     LLM_TASK_SETTINGS
 )
 
@@ -133,7 +134,17 @@ class OpenAIService(BaseLLMService):
                 "max_tokens": settings['max_tokens']
             }
             
-            response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
+            # Настраиваем прокси, если включено
+            proxies = None
+            if OPENAI_USE_PROXY and OPENAI_PROXY_HOST and OPENAI_PROXY_PORT:
+                proxy_url = f"http://{OPENAI_PROXY_USER}:{OPENAI_PROXY_PASSWORD}@{OPENAI_PROXY_HOST}:{OPENAI_PROXY_PORT}"
+                proxies = {
+                    "http": proxy_url,
+                    "https": proxy_url
+                }
+                print(f"🌐 OpenAI: Используется прокси {OPENAI_PROXY_HOST}:{OPENAI_PROXY_PORT}")
+            
+            response = requests.post(OPENAI_API_URL, headers=headers, json=payload, proxies=proxies, timeout=60)
             response.raise_for_status()
             
             response_json = response.json()
