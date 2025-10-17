@@ -26,31 +26,31 @@ LLM_TASK_SETTINGS = {
     # Верификация ответов - требует высокой точности
     'verification': {
         'temperature': 0.2,
-        'max_tokens': 8000
+        'max_tokens': 16000
     },
     
     # Классификация - требует точности и краткости
     'classification': {
         'temperature': 0.1,
-        'max_tokens': 500
+        'max_tokens': 2000
     },
     
     # Компиляция ответов - баланс точности и структурированности
     'compilation': {
         'temperature': 0.3,
-        'max_tokens': 5000
+        'max_tokens': 10000
     },
     
     # Объяснение конфликтов - может быть более креативным
     'explanation': {
         'temperature': 0.5,
-        'max_tokens': 3000
+        'max_tokens': 8000
     },
     
     # Функциональный анализ - требует точности
     'functionality': {
         'temperature': 0.2,
-        'max_tokens': 4000
+        'max_tokens': 12000
     }
 }
 
