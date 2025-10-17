@@ -315,6 +315,49 @@ class TelegramBot:
         # Получаем портрет пользователя для контекста
         portrait = self.db.get_session_portrait(user_id, session_id)
         
+        # Сначала показываем пользователю детали конфликта
+        conflict_details = "⚠️ **ОБНАРУЖЕНО ПРОТИВОРЕЧИЕ В ОТВЕТАХ**\n\n"
+        conflict_details += "Ваши ответы на следующие вопросы противоречат друг другу:\n\n"
+        
+        # Получаем детали для каждого вопроса в конфликте
+        user_responses = self.db.get_user_responses(user_id, session_id, only_active=True)
+        response_map = {r['question']: r for r in user_responses}
+        
+        for i, q_info in enumerate(conflict['questions'], 1):
+            question_id = q_info['question_id']
+            question_text = q_info['question_text']
+            answer_text = q_info.get('answer_text', '')  # Общее описание уровня из конфликтов
+            
+            # Получаем уровень из response_map
+            if question_id in response_map:
+                user_response = response_map[question_id]
+                level = user_response['final_answer']
+                
+                conflict_details += f"**{i}. Вопрос {question_id}:** {question_text}\n"
+                
+                # Показываем уровень и общее описание
+                if level and level.isdigit():
+                    level_num = int(level)
+                    conflict_details += f"   ├─ 🔢 Уровень {level_num}"
+                    
+                    # Добавляем общее описание из конфликтов
+                    if answer_text:
+                        conflict_details += f": _{answer_text[:100]}{'...' if len(answer_text) > 100 else ''}_\n"
+                    else:
+                        conflict_details += "\n"
+                    
+                    # Добавляем описание по HAY из справочника
+                    try:
+                        hay_desc = self.db.get_hay_level_description(question_id, level_num)
+                        if hay_desc:
+                            conflict_details += f"   └─ 📊 HAY: _{hay_desc[:100]}{'...' if len(hay_desc) > 100 else ''}_\n"
+                    except (ValueError, TypeError):
+                        pass
+                
+                conflict_details += "\n"
+        
+        await message.answer(conflict_details)
+        
         # Показываем typing indicator
         await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
         
@@ -345,10 +388,9 @@ class TelegramBot:
         self.active_sessions[user_id]['state'] = state
         self.db.save_user_state(user_id, session_id, state)
         
-        # Сообщаем пользователю о конфликте
-        await message.answer(f"⚠️ Обнаружено противоречие в ваших ответах!")
+        # Отправляем объяснение от LLM
         await message.answer(f"🤖 {explanation}")
-        await message.answer(f"🔄 Предлагаю ответить на некоторые вопросы заново...")
+        await message.answer(f"🔄 Предлагаю ответить на эти вопросы заново...")
         
         # Продолжаем опрос с конфликтующих вопросов
         await self.next_question(message, user_id, session_id)
