@@ -34,10 +34,10 @@ def update_grading_tables():
                     INSERT INTO grading_p1 (answer_q8, answer_q9, answer_q10, p1_value)
                     VALUES (?, ?, ?, ?)
                 """, (
-                    int(row.iloc[0]),  # ответ на вопрос 8
-                    int(row.iloc[1]),  # ответ на вопрос 9  
-                    int(row.iloc[2]),  # ответ на вопрос 10
-                    int(row.iloc[3])   # значение p1
+                    round(row.iloc[0]),  # ответ на вопрос 8
+                    round(row.iloc[1]),  # ответ на вопрос 9  
+                    round(row.iloc[2]),  # ответ на вопрос 10
+                    round(row.iloc[3])   # значение p1
                 ))
             
             # === ТАБЛИЦА P2 ===
@@ -61,9 +61,9 @@ def update_grading_tables():
                     INSERT INTO grading_p2 (answer_q11, answer_q12, p2_value)
                     VALUES (?, ?, ?)
                 """, (
-                    int(row.iloc[0]),  # ответ на вопрос 11
-                    int(row.iloc[1]),  # ответ на вопрос 12
-                    int(row.iloc[2])   # значение p2
+                    round(row.iloc[0]),  # ответ на вопрос 11
+                    round(row.iloc[1]),  # ответ на вопрос 12
+                    round(row.iloc[2])   # значение p2
                 ))
             
             # === ТАБЛИЦА P3 ===
@@ -87,9 +87,9 @@ def update_grading_tables():
                     INSERT INTO grading_p3 (p1_value, p2_value, p3_value)
                     VALUES (?, ?, ?)
                 """, (
-                    float(row.iloc[0]),  # p1 значение
-                    int(row.iloc[1]),    # p2 значение
-                    int(row.iloc[2])     # p3 значение
+                    round(row.iloc[0]),  # p1 значение
+                    round(row.iloc[1]),  # p2 значение
+                    round(row.iloc[2])   # p3 значение
                 ))
                 
             # === ТАБЛИЦА P4-14 ===
@@ -114,10 +114,10 @@ def update_grading_tables():
                     INSERT INTO grading_p4_14 (answer_q16, answer_q13, answer_q14, p4_value)
                     VALUES (?, ?, ?, ?)
                 """, (
-                    int(row.iloc[0]),  # ответ на вопрос 16
-                    int(row.iloc[1]),  # ответ на вопрос 13
-                    int(row.iloc[2]),  # ответ на вопрос 14
-                    int(row.iloc[3])   # значение p4
+                    round(row.iloc[0]),  # ответ на вопрос 16
+                    round(row.iloc[1]),  # ответ на вопрос 13
+                    round(row.iloc[2]),  # ответ на вопрос 14
+                    round(row.iloc[3])   # значение p4
                 ))
                 
             # === ТАБЛИЦА P4-15 ===
@@ -142,10 +142,10 @@ def update_grading_tables():
                     INSERT INTO grading_p4_15 (answer_q16, answer_q13, answer_q15, p4_value)
                     VALUES (?, ?, ?, ?)
                 """, (
-                    int(row.iloc[0]),  # ответ на вопрос 16
-                    int(row.iloc[1]),  # ответ на вопрос 13
-                    int(row.iloc[2]),  # ответ на вопрос 15
-                    int(row.iloc[3])   # значение p4
+                    round(row.iloc[0]),  # ответ на вопрос 16
+                    round(row.iloc[1]),  # ответ на вопрос 13
+                    round(row.iloc[2]),  # ответ на вопрос 15
+                    round(row.iloc[3])   # значение p4
                 ))
                 
             # === ТАБЛИЦА ГРЕЙД ===
@@ -171,9 +171,9 @@ def update_grading_tables():
                         INSERT INTO grading_scale (low_bound, mid_point, high_bound, sber_grade)
                         VALUES (?, ?, ?, ?)
                     """, (
-                        int(row.iloc[0]),      # Low
-                        int(row.iloc[1]),      # Mid point  
-                        int(row.iloc[2]),      # High
+                        round(row.iloc[0]),    # Low
+                        round(row.iloc[1]),    # Mid point  
+                        round(row.iloc[2]),    # High
                         str(row.iloc[3]) if pd.notna(row.iloc[3]) else None  # Sber Grade
                     ))
             

@@ -1,12 +1,21 @@
 from typing import Dict, List, Tuple
-from llm_service import llm_service
+from llm_services import BaseLLMService
 
 class VerificationAgent:
-    def process_answer(self, question_data: Dict, user_answer: str, conversation: List[str]) -> Tuple[bool, str]:
+    def __init__(self, llm_service: BaseLLMService):
+        self.llm_service = llm_service
+    
+    def process_answer(self, question_data: Dict, user_answer: str, conversation: List[str], user_portrait: str = None) -> Tuple[bool, str]:
         """Обработка ответа пользователя: проверка + уточнение если нужно"""
         
         # Формируем структурированный диалог
-        dialog_text = "ДИАЛОГ:\n"
+        dialog_text = ""
+        
+        # Добавляем портрет пользователя, если есть
+        if user_portrait:
+            dialog_text += f"КОНТЕКСТ О ПОЛЬЗОВАТЕЛЕ: {user_portrait}\n\n"
+        
+        dialog_text += "ДИАЛОГ:\n"
         
         # Добавляем первоначальный вопрос бота
         dialog_text += f"Бот: {question_data['question']}\n"
@@ -27,7 +36,7 @@ class VerificationAgent:
         print("-" * 50)
         
         messages = [{"role": "user", "content": prompt}]
-        response = llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages)
         
         print("✅ ОТВЕТ LLM:")
         print(response)
@@ -40,7 +49,10 @@ class VerificationAgent:
             return False, response.replace("УТОЧНИ:", "").strip()
 
 class AnswerCompilerAgent:
-    def create_full_answer(self, question_data: Dict, conversation: List[str]) -> str:
+    def __init__(self, llm_service: BaseLLMService):
+        self.llm_service = llm_service
+    
+    def create_full_answer(self, question_data: Dict, conversation: List[str], user_portrait: str = None) -> str:
         """Создание полного ответа из диалога"""
         # Собираем только ответы пользователя из диалога
         user_answers = []
@@ -49,7 +61,13 @@ class AnswerCompilerAgent:
                 user_answers.append(msg)
         
         # Формируем структурированный диалог для LLM
-        dialog_for_llm = "ДИАЛОГ:\n"
+        dialog_for_llm = ""
+        
+        # Добавляем портрет пользователя, если есть
+        if user_portrait:
+            dialog_for_llm += f"КОНТЕКСТ О ПОЛЬЗОВАТЕЛЕ (предыдущие ответы):\n{user_portrait}\n\n"
+        
+        dialog_for_llm += "ДИАЛОГ:\n"
         for i, msg in enumerate(conversation):
             if i % 2 == 0:  # четные индексы - ответы пользователя
                 dialog_for_llm += f"Пользователь: {msg}\n"
@@ -70,7 +88,7 @@ class AnswerCompilerAgent:
         print("-" * 50)
 
         messages = [{"role": "user", "content": prompt}]
-        response = llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages)
         
         print("✅ ОТВЕТ LLM:")
         print(response)
@@ -79,7 +97,10 @@ class AnswerCompilerAgent:
         return response.strip()
 
 class ClassificationAgent:
-    def classify_answer(self, question_data: Dict, full_answer: str) -> str:
+    def __init__(self, llm_service: BaseLLMService):
+        self.llm_service = llm_service
+    
+    def classify_answer(self, question_data: Dict, full_answer: str, user_portrait: str = None) -> str:
         """Классификация ответа согласно инструкции из поля Classifier"""
         
         # Проверяем, есть ли инструкция классификации
@@ -100,13 +121,17 @@ class ClassificationAgent:
                 # Если нет подстановок, используем инструкцию как есть
                 prompt = classifier_instruction
         
+        # Добавляем портрет пользователя в начало промпта, если есть
+        if user_portrait:
+            prompt = f"КОНТЕКСТ О ПОЛЬЗОВАТЕЛЕ (предыдущие ответы):\n{user_portrait}\n\n" + prompt
+        
         print("🏷️ КЛАССИФИКАТОР - Отправляю в LLM:")
         print("-" * 50)
         print(prompt)
         print("-" * 50)
         
         messages = [{"role": "user", "content": prompt}]
-        response = llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages)
         
         print("✅ ОТВЕТ LLM (КЛАССИФИКАЦИЯ):")
         print(response)
@@ -114,6 +139,65 @@ class ClassificationAgent:
         
         return response.strip()
 
-verification_agent = VerificationAgent()
-answer_agent = AnswerCompilerAgent()
-classification_agent = ClassificationAgent() 
+# Агенты теперь создаются с передачей llm_service в telegram_bot.py
+
+
+class FunctionalityAgent:
+    """Агент для генерации функционала должности на основе ответов"""
+    
+    def __init__(self, llm_service):
+        self.llm_service = llm_service
+    
+    def generate_functionality(self, user_portrait: str) -> str:
+        """
+        Генерирует функционал должности на основе портрета пользователя
+        Портрет теперь в формате: Вопрос - Полный ответ - Уровень
+        """
+        try:
+            messages = [
+                {
+                    "role": "system",
+                    "content": """Твоя задача - сгенерировать функционал должности на основе ответов пользователя.
+
+ВАЖНО:
+- Создай список из 5-8 основных функций должности
+- Формулируй функции конкретно и профессионально
+- Каждая функция - отдельный пункт списка
+- Используй глаголы в инфинитиве: "Разрабатывать", "Анализировать", "Координировать"
+- Основывайся только на предоставленной информации из ответов пользователя
+
+ФОРМАТ ВХОДНЫХ ДАННЫХ:
+Ты получишь структурированные ответы в формате:
+Вопрос N: [текст вопроса]
+→ Ответ: [полный ответ пользователя]
+→ Уровень: [классификация ответа]
+
+ПРИМЕР ВЫВОДА:
+• Разрабатывать программное обеспечение на языке Python
+• Участвовать в проектировании архитектуры системы
+• Проводить код-ревью и тестирование
+• Исправлять ошибки и оптимизировать производительность
+• Участвовать в планировании спринтов
+• Документировать техническую документацию
+
+Сгенерируй функционал на основе следующих ответов пользователя:"""
+                },
+                {
+                    "role": "user", 
+                    "content": user_portrait or "Информация о должности не предоставлена"
+                }
+            ]
+            
+            functionality = self.llm_service.generate_response(messages)
+            
+            # Убираем возможные лишние элементы форматирования
+            functionality = functionality.strip()
+            
+            return functionality
+            
+        except Exception as e:
+            print(f"❌ Ошибка FunctionalityAgent: {e}")
+            return "• Выполнение основных рабочих задач\n• Взаимодействие с коллегами\n• Соблюдение корпоративных стандартов"
+
+# PortraitAgent больше не используется - портрет формируется напрямую в database.py
+# без использования LLM, просто структурированным форматированием данных 

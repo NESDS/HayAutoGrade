@@ -5,11 +5,13 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram import F
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, BotCommand
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 from database import Database
 from config import TELEGRAM_BOT_TOKEN
-from processing_agents import verification_agent, answer_agent, classification_agent
+from processing_agents import VerificationAgent, AnswerCompilerAgent, ClassificationAgent
 from html_report_generator import HTMLReportGenerator
+from llm_services import LLMFactory
 
 class TelegramBot:
     def __init__(self):
@@ -22,10 +24,61 @@ class TelegramBot:
         
         self.dp.message.register(self.start_command, Command("start"))
         self.dp.message.register(self.handle_message, ~F.text.startswith("/"))
+        
+        # Регистрируем обработчики callback-ов для адаптивных вопросов
+        self.dp.callback_query.register(self.handle_adaptive_callback, F.data.startswith("q11_"))
+        self.dp.callback_query.register(self.handle_adaptive_callback, F.data.startswith("q12_"))
+        self.dp.callback_query.register(self.handle_restart_callback, F.data == "restart_from_q8")
+        
+        # Регистрируем обработчик функционала (вопрос 18)
+        self.dp.callback_query.register(self.handle_functionality_callback, F.data.startswith("func_"))
+        
+        # Регистрируем обработчик выбора LLM
+        self.dp.callback_query.register(self.handle_llm_selection, F.data.startswith("llm_"))
     
     async def start_command(self, message: Message):
         """Начать опрос"""
         user_id = message.from_user.id
+        
+        # Всегда показываем выбор LLM при старте
+        await self.show_llm_selection(message, user_id)
+    
+    async def show_llm_selection(self, message: Message, user_id: int):
+        """Показать выбор LLM пользователю"""
+        text = """🤖 Выберите AI помощника для обработки ваших ответов:
+
+🇷🇺 **GigaChat** - российская разработка Сбера
+🇺🇸 **GPT-5** - OpenAI GPT-5 Chat Latest"""
+        
+        # Создаем кнопки выбора
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🇷🇺 GigaChat", callback_data="llm_gigachat")],
+            [InlineKeyboardButton(text="🇺🇸 GPT-5", callback_data="llm_openai")]
+        ])
+        
+        await message.answer(text, reply_markup=keyboard)
+    
+    async def handle_llm_selection(self, callback_query: CallbackQuery):
+        """Обработка выбора LLM"""
+        user_id = callback_query.from_user.id
+        llm_type = callback_query.data.split('_')[1]  # llm_gigachat -> gigachat
+        
+        # Убираем кнопки выбора
+        service = LLMFactory.create_service(llm_type)
+        selected_text = f"✅ Выбран AI помощник: {service.emoji} **{service.name}**"
+        
+        try:
+            await callback_query.message.edit_text(text=selected_text, reply_markup=None)
+        except Exception as e:
+            print(f"⚠️ Не удалось отредактировать сообщение: {e}")
+        
+        await callback_query.answer(f"Выбран {service.name}!")
+        
+        # Начинаем опрос с выбранным LLM
+        await self.start_survey_with_llm(callback_query.message, user_id, llm_type)
+    
+    async def start_survey_with_llm(self, message: Message, user_id: int, llm_type: str):
+        """Начать опрос с выбранным LLM"""
         session_id = self.db.get_next_session_id(user_id)
         
         # Получаем список вопросов с правильной фильтрацией
@@ -35,7 +88,8 @@ class TelegramBot:
         state = {
             'session_id': session_id,
             'remaining_questions': remaining_questions,
-            'conversation': []
+            'conversation': [],
+            'llm_type': llm_type  # Сохраняем выбранный LLM в состоянии
         }
         
         # Сохраняем активную сессию и состояние в памяти
@@ -44,8 +98,36 @@ class TelegramBot:
             'state': state
         }
         
-        await message.answer(f"Начинаю опрос! (Сессия #{session_id})")
+        # Показываем какой LLM используется
+        service = LLMFactory.create_service(llm_type)
+        await message.answer(f"🚀 Начинаю опрос! (Сессия #{session_id})\n💡 Используется: {service.emoji} {service.name}")
         await self.send_next_question(message, user_id, session_id)
+    
+    def get_agents_for_user(self, user_id: int):
+        """Получить агенты с правильным LLM для пользователя"""
+        # Получаем тип LLM из текущей сессии
+        if user_id in self.active_sessions:
+            llm_type = self.active_sessions[user_id]['state'].get('llm_type', 'gigachat')
+        else:
+            llm_type = 'gigachat'  # fallback если нет активной сессии
+        
+        # Создаем LLM сервис
+        llm_service = LLMFactory.create_service(llm_type)
+        
+        # Создаем агенты с этим сервисом
+        from processing_agents import FunctionalityAgent  # Добавляем импорт
+        
+        verification_agent = VerificationAgent(llm_service)
+        answer_agent = AnswerCompilerAgent(llm_service)
+        classification_agent = ClassificationAgent(llm_service)
+        functionality_agent = FunctionalityAgent(llm_service)
+        
+        return {
+            'verification': verification_agent,
+            'answer': answer_agent,
+            'classification': classification_agent,
+            'functionality': functionality_agent
+        }
     
     async def send_question(self, message: Message, question_id: int):
         """Отправить вопрос"""
@@ -81,6 +163,11 @@ class TelegramBot:
         print(f"🔍 Active Session ID: {session_id}")
         print(f"🔍 User state: {state}")
         
+        # Проверяем, ожидаются ли дополнения к функционалу (вопрос 18)
+        if state.get('awaiting_functionality_addition', False):
+            await self.handle_functionality_addition(message, user_id, session_id, user_answer)
+            return
+        
         if not state:
             print("❌ Состояние не найдено, отправляю сообщение о /start")
             await message.answer("Напишите /start для начала опроса")
@@ -107,11 +194,22 @@ class TelegramBot:
         
         print(f"🔍 Conversation after: {state['conversation']}")
         
+        # Получаем агенты с правильным LLM
+        agents = self.get_agents_for_user(user_id)
+        verification_agent = agents['verification']
+        answer_agent = agents['answer'] 
+        classification_agent = agents['classification']
+        
         if question_data['answer_options']:
-            final_answer = classification_agent.classify_answer(question_data, user_answer)
+            # Получаем портрет для контекста
+            portrait = self.db.get_session_portrait(user_id, session_id)
+            final_answer = classification_agent.classify_answer(question_data, user_answer, portrait)
             
             # Сначала сохраняем ответ в БД без обновленного state
             self.db.save_response(user_id, session_id, current_question, user_answer, final_answer, None)
+            
+            # Генерируем/обновляем портрет пользователя
+            self.db.generate_user_portrait(user_id, session_id)
             
             # Теперь пересчитываем список оставшихся вопросов с учетом нового ответа
             state['remaining_questions'] = self.db.get_remaining_questions(user_id, session_id)
@@ -125,17 +223,24 @@ class TelegramBot:
             
             await self.next_question(message, user_id, session_id)
         else:
+            # Получаем портрет пользователя для контекста
+            portrait = self.db.get_session_portrait(user_id, session_id)
+            
             is_accepted, response_text = verification_agent.process_answer(
-                question_data, user_answer, state['conversation']
+                question_data, user_answer, state['conversation'], portrait
             )
             
             if is_accepted:
-                full_answer = answer_agent.create_full_answer(question_data, state['conversation'])
-                final_answer = classification_agent.classify_answer(question_data, full_answer)
+                # Портрет уже получен выше, используем его
+                full_answer = answer_agent.create_full_answer(question_data, state['conversation'], portrait)
+                final_answer = classification_agent.classify_answer(question_data, full_answer, portrait)
                 
                 # Сначала сохраняем ответ в БД без обновленного state + проверяем конфликты
                 # В поле answer записываем полный ответ из диалога, а не только последнее сообщение
                 response_id, conflicts = self.db.save_response(user_id, session_id, current_question, full_answer, final_answer, None)
+                
+                # Генерируем/обновляем портрет пользователя
+                self.db.generate_user_portrait(user_id, session_id)
                 
                 # Проверяем конфликты
                 if conflicts:
@@ -224,7 +329,16 @@ class TelegramBot:
         
         if state['remaining_questions']:
             next_question_id = state['remaining_questions'][0]
-            await self.send_question(message, next_question_id)
+            
+            # Проверяем, нужна ли адаптивная логика для вопросов 11, 12 или 18
+            if next_question_id == 11:
+                await self.send_adaptive_question_11(message, user_id, session_id)
+            elif next_question_id == 12:
+                await self.send_adaptive_question_12(message, user_id, session_id)
+            elif next_question_id == 18:
+                await self.send_adaptive_question_18(message, user_id, session_id)
+            else:
+                await self.send_question(message, next_question_id)
         else:
             # Сохраняем финальное состояние с пустым remaining_questions
             self.db.save_user_state(user_id, session_id, state)
@@ -264,6 +378,507 @@ class TelegramBot:
         except Exception as e:
             print(f"Ошибка при генерации отчета: {e}")
             await message.answer("❌ Произошла ошибка при генерации отчета. Обратитесь к администратору.")
+    
+    async def send_adaptive_question_11(self, message: Message, user_id: int, session_id: int):
+        """Отправка вопроса 11 с адаптивными вариантами на основе P1"""
+        try:
+            # Вычисляем промежуточный P1
+            from grade_calculator import GradeCalculator
+            calculator = GradeCalculator()
+            p1_value = calculator.calculate_intermediate_p1(user_id, session_id)
+            
+            if p1_value is None:
+                print("⚠️ Не удалось вычислить P1, показываем варианты для Q8,Q9,Q10")
+                await self.show_missing_p1_options(message, user_id, session_id)
+                return
+            
+            # Получаем варианты для Q11
+            variants = self.db.get_question_variants(11, p1_value)
+            question_data = self.db.get_question(11)
+            
+            if not variants:
+                print("⚠️ Нет вариантов для Q11, используем стандартную логику")
+                await self.send_question(message, 11)
+                return
+            
+            # Убираем Q11 из remaining_questions
+            state = self.active_sessions[user_id]['state']
+            if 11 in state['remaining_questions']:
+                state['remaining_questions'].remove(11)
+            self.active_sessions[user_id]['state'] = state
+            
+            # Убираем старую reply клавиатуру (если была)
+            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            
+            # Формируем сообщение и клавиатуру
+            if len(variants) == 1:
+                text = self._format_single_variant_message(question_data, p1_value, variants[0])
+                keyboard = self._create_single_variant_keyboard(variants[0], 11)
+            else:
+                text = self._format_multiple_variants_message(question_data, p1_value, variants)
+                keyboard = self._create_multiple_variants_keyboard(variants, 11)
+            
+            await message.answer(text, reply_markup=keyboard)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в адаптивном Q11: {e}")
+            # Fallback к стандартной логике
+            await self.send_question(message, 11)
+    
+    def _format_single_variant_message(self, question_data: Dict, p1_value: int, variant: Dict) -> str:
+        """Формат сообщения для единственного варианта"""
+        return f"""Вопрос {question_data['id']}: {question_data['question']}
+
+🔍 Исходя из ваших предыдущих ответов (P1 = {p1_value}), возможен только следующий вариант:
+
+📋 {variant['variant_text']}
+
+Согласны ли вы с этим вариантом?"""
+
+    def _format_multiple_variants_message(self, question_data: Dict, p1_value: int, variants: List[Dict]) -> str:
+        """Формат сообщения для множественных вариантов"""
+        text = f"""Вопрос {question_data['id']}: {question_data['question']}
+
+🔍 Исходя из ваших предыдущих ответов (P1 = {p1_value}), возможны следующие варианты:
+
+"""
+        # Добавляем все варианты в текст сообщения
+        for variant in variants:
+            text += f"📋 {variant['variant_text']}\n\n"
+        
+        text += "Выберите наиболее подходящий вариант:"
+        return text
+
+    def _create_single_variant_keyboard(self, variant: Dict, question_num: int) -> InlineKeyboardMarkup:
+        """Клавиатура для единственного варианта"""
+        buttons = [
+            [InlineKeyboardButton(
+                text=f"✅ Вариант {variant['answer_value']}", 
+                callback_data=f"q{question_num}_accept_{variant['answer_value']}"
+            )],
+            [InlineKeyboardButton(
+                text="🔄 Переответить с 8-го вопроса", 
+                callback_data="restart_from_q8"
+            )]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    def _create_multiple_variants_keyboard(self, variants: List[Dict], question_num: int) -> InlineKeyboardMarkup:
+        """Клавиатура для множественных вариантов"""
+        buttons = []
+        
+        # Кнопки для каждого варианта - только номера
+        for variant in variants:
+            buttons.append([InlineKeyboardButton(
+                text=f"{variant['answer_value']}",  # Только номер
+                callback_data=f"q{question_num}_select_{variant['answer_value']}"
+            )])
+        
+        # Кнопка пересдачи
+        buttons.append([InlineKeyboardButton(
+            text="🔄 Переответить с 8-го вопроса",
+            callback_data="restart_from_q8"
+        )])
+        
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
+    
+    async def handle_adaptive_callback(self, callback_query: CallbackQuery):
+        """Обработка выбора варианта ответа для адаптивных вопросов"""
+        data = callback_query.data
+        user_id = callback_query.from_user.id
+        
+        if user_id not in self.active_sessions:
+            await callback_query.answer("❌ Сессия не найдена. Напишите /start")
+            return
+        
+        session_id = self.active_sessions[user_id]['session_id']
+        
+        try:
+            # Парсим callback_data: "q11_accept_2" или "q11_select_3"
+            parts = data.split('_')
+            question_num = int(parts[0][1:])  # q11 -> 11
+            action = parts[1]  # accept или select
+            answer_value = int(parts[2])  # номер ответа
+            
+            # Получаем полный текст варианта
+            variant_text = self._get_variant_text_by_value(question_num, answer_value, user_id, session_id)
+            
+            # Сохраняем ответ БЕЗ вызова агентов обработки
+            response_id, conflicts = self.db.save_response(
+                user=user_id,
+                session_id=session_id,
+                question=question_num,
+                answer=variant_text,
+                final_answer=str(answer_value),  # Сразу финальный ответ
+                user_state=None
+            )
+            
+            # Генерируем/обновляем портрет пользователя
+            self.db.generate_user_portrait(user_id, session_id)
+            
+            # Проверяем конфликты (стандартная логика)
+            if conflicts:
+                state = self.active_sessions[user_id]['state']
+                await self.handle_conflict(callback_query.message, user_id, session_id, conflicts[0], state)
+                return
+            
+            await callback_query.answer("✅ Ответ принят!")
+            
+            # Убираем кнопки из исходного сообщения
+            try:
+                await callback_query.message.edit_reply_markup(reply_markup=None)
+            except Exception as e:
+                print(f"⚠️ Не удалось убрать кнопки: {e}")
+            
+            # Отправляем подтверждение выбора в отдельном сообщении
+            selected_text = f"✅ **Выбран вариант:**\n\n📋 {variant_text}"
+            await callback_query.message.answer(selected_text)
+            
+            # Переходим к следующему вопросу
+            if question_num == 11:
+                # Переходим к адаптивному Q12
+                await self.send_adaptive_question_12(callback_query.message, user_id, session_id)
+            else:
+                # Q12 завершён, переходим к обычной логике
+                await self.next_question(callback_query.message, user_id, session_id)
+                
+        except Exception as e:
+            print(f"❌ Ошибка обработки callback: {e}")
+            await callback_query.answer("❌ Произошла ошибка")
+
+    async def handle_restart_callback(self, callback_query: CallbackQuery):
+        """Обработка пересдачи с 8-го вопроса"""
+        user_id = callback_query.from_user.id
+        
+        if user_id not in self.active_sessions:
+            await callback_query.answer("❌ Сессия не найдена")
+            return
+        
+        session_id = self.active_sessions[user_id]['session_id']
+        
+        try:
+            # Деактивируем ответы на вопросы 8-12
+            self.db.reset_questions_from_8(user_id, session_id)
+            
+            # Обновляем состояние пользователя
+            state = self.active_sessions[user_id]['state']
+            state['remaining_questions'] = self.db.get_remaining_questions(user_id, session_id)
+            state['conversation'] = []
+            
+            # Сохраняем состояние
+            self.active_sessions[user_id]['state'] = state
+            self.db.save_user_state(user_id, session_id, state)
+            
+            await callback_query.answer("🔄 Начинаем заново с 8-го вопроса")
+            
+            # Убираем кнопки из предыдущего сообщения
+            try:
+                await callback_query.message.edit_text(
+                    text="🔄 Пересдаём вопросы с 8-го...",
+                    reply_markup=None
+                )
+            except Exception as e:
+                print(f"⚠️ Не удалось отредактировать сообщение: {e}")
+            
+            await callback_query.message.answer("Хорошо, давайте пересдадим вопросы с 8-го.", 
+                                               reply_markup=ReplyKeyboardRemove())
+            
+            # Переходим к вопросу 8
+            await self.send_next_question(callback_query.message, user_id, session_id)
+            
+        except Exception as e:
+            print(f"❌ Ошибка пересдачи: {e}")
+            await callback_query.answer("❌ Произошла ошибка")
+
+    async def handle_functionality_callback(self, callback_query: CallbackQuery):
+        """Обработка кнопки принятия функционала (вопрос 18)"""
+        user_id = callback_query.from_user.id
+        
+        if user_id not in self.active_sessions:
+            await callback_query.answer("❌ Сессия не найдена")
+            return
+        
+        session_id = self.active_sessions[user_id]['session_id']
+        
+        try:
+            if callback_query.data == "func_accept_18":
+                # Получаем текст сообщения с функционалом
+                message_text = callback_query.message.text
+                
+                # Извлекаем сгенерированный функционал из сообщения
+                # Ищем функционал между "сформирован следующий функционал:" и "При необходимости"
+                start_marker = "сформирован следующий функционал:\n\n"
+                end_marker = "\n\nПри необходимости"
+                
+                start_pos = message_text.find(start_marker)
+                end_pos = message_text.find(end_marker)
+                
+                if start_pos != -1 and end_pos != -1:
+                    functionality = message_text[start_pos + len(start_marker):end_pos].strip()
+                else:
+                    functionality = "Функционал принят как есть"
+                
+                # Сохраняем как ответ на вопрос 18
+                self.db.save_response(user_id, session_id, 18, functionality, functionality, None)
+                
+                # Обновляем портрет пользователя
+                self.db.generate_user_portrait(user_id, session_id)
+                
+                # Убираем состояние ожидания дополнений
+                state = self.active_sessions[user_id]['state']
+                state['awaiting_functionality_addition'] = False
+                state.pop('generated_functionality', None)
+                self.active_sessions[user_id]['state'] = state
+                
+                # Убираем кнопки и показываем что функционал принят
+                try:
+                    await callback_query.message.edit_text(
+                        text=f"✅ **Функционал принят:**\n\n{functionality}",
+                        reply_markup=None
+                    )
+                except Exception as e:
+                    print(f"⚠️ Не удалось отредактировать сообщение: {e}")
+                
+                await callback_query.answer("✅ Функционал принят!")
+                
+                # Переходим к следующему вопросу
+                await self.send_next_question(callback_query.message, user_id, session_id)
+                
+        except Exception as e:
+            print(f"❌ Ошибка обработки функционала: {e}")
+            await callback_query.answer("❌ Произошла ошибка")
+
+    async def handle_functionality_addition(self, message: Message, user_id: int, session_id: int, addition_text: str):
+        """Обработка текстовых дополнений к функционалу"""
+        try:
+            state = self.active_sessions[user_id]['state']
+            generated_functionality = state.get('generated_functionality', '')
+            
+            # Объединяем сгенерированный функционал с дополнениями пользователя
+            full_functionality = f"{generated_functionality}\n\n**Дополнения:**\n{addition_text}"
+            
+            # Сохраняем объединенный функционал как ответ на вопрос 18
+            self.db.save_response(user_id, session_id, 18, full_functionality, full_functionality, None)
+            
+            # Обновляем портрет пользователя
+            self.db.generate_user_portrait(user_id, session_id)
+            
+            # Убираем состояние ожидания дополнений
+            state['awaiting_functionality_addition'] = False
+            state.pop('generated_functionality', None)
+            self.active_sessions[user_id]['state'] = state
+            
+            # Подтверждаем получение дополнений
+            await message.answer(f"✅ **Функционал сохранен с вашими дополнениями:**\n\n{full_functionality}")
+            
+            # Переходим к следующему вопросу
+            await self.send_next_question(message, user_id, session_id)
+            
+        except Exception as e:
+            print(f"❌ Ошибка обработки дополнений функционала: {e}")
+            await message.answer("❌ Произошла ошибка при сохранении дополнений")
+
+    def _get_variant_text_by_value(self, question_num: int, answer_value: int, user_id: int, session_id: int) -> str:
+        """Получить полный текст варианта по номеру ответа"""
+        try:
+            from grade_calculator import GradeCalculator
+            calculator = GradeCalculator()
+            p1_value = calculator.calculate_intermediate_p1(user_id, session_id)
+            
+            if p1_value is not None:
+                variants = self.db.get_question_variants(question_num, p1_value)
+                
+                for variant in variants:
+                    if variant['answer_value'] == answer_value:
+                        return variant['variant_text']
+            
+            return f"Вариант {answer_value}"  # Fallback
+            
+        except Exception as e:
+            print(f"❌ Ошибка получения текста варианта: {e}")
+            return f"Вариант {answer_value}"
+
+    async def send_adaptive_question_12(self, message: Message, user_id: int, session_id: int):
+        """Отправка вопроса 12 с адаптивными вариантами с учетом ответа на Q11"""
+        try:
+            # Вычисляем промежуточный P1
+            from grade_calculator import GradeCalculator
+            calculator = GradeCalculator()
+            p1_value = calculator.calculate_intermediate_p1(user_id, session_id)
+            
+            if p1_value is None:
+                print("⚠️ Не удалось вычислить P1 для Q12, показываем варианты для Q8,Q9,Q10")
+                await self.show_missing_p1_options(message, user_id, session_id)
+                return
+            
+            # Получаем ответ на Q11 из БД
+            user_responses = self.db.get_user_responses(user_id, session_id)
+            q11_answer = None
+            
+            for response in user_responses:
+                if response['question'] == 11:  # question номер 11
+                    q11_final_answer = response['final_answer']  # final_answer
+                    try:
+                        q11_answer = int(q11_final_answer)
+                        break
+                    except (ValueError, TypeError):
+                        print(f"⚠️ Не удалось преобразовать ответ Q11 в число: {q11_final_answer}")
+                        continue
+            
+            if q11_answer is None:
+                print("⚠️ Не найден ответ на Q11, используем стандартную логику")
+                await self.send_question(message, 12)
+                return
+            
+            print(f"🔍 Для Q12: P1={p1_value}, Q11_answer={q11_answer}")
+            
+            # Получаем варианты для Q12 с учетом ответа на Q11
+            variants = self.db.get_question_variants(12, p1_value, q11_answer)
+            question_data = self.db.get_question(12)
+            
+            if not variants:
+                print("⚠️ Нет вариантов для Q12, используем стандартную логику")
+                await self.send_question(message, 12)
+                return
+            
+            # Убираем Q12 из remaining_questions
+            state = self.active_sessions[user_id]['state']
+            if 12 in state['remaining_questions']:
+                state['remaining_questions'].remove(12)
+            self.active_sessions[user_id]['state'] = state
+            
+            # Убираем старую reply клавиатуру (если была)
+            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            
+            # Формируем сообщение и клавиатуру
+            if len(variants) == 1:
+                text = self._format_single_variant_message(question_data, p1_value, variants[0])
+                keyboard = self._create_single_variant_keyboard(variants[0], 12)
+            else:
+                text = self._format_multiple_variants_message(question_data, p1_value, variants)
+                keyboard = self._create_multiple_variants_keyboard(variants, 12)
+            
+            await message.answer(text, reply_markup=keyboard)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в адаптивном Q12: {e}")
+            # Fallback к стандартной логике
+            await self.send_question(message, 12)
+    
+    async def send_adaptive_question_18(self, message: Message, user_id: int, session_id: int):
+        """Отправка вопроса 18 с автогенерированным функционалом"""
+        try:
+            # Получаем портрет пользователя
+            portrait = self.db.get_session_portrait(user_id, session_id)
+            
+            if not portrait:
+                print("⚠️ Портрет пользователя пуст, используем стандартную логику")
+                await self.send_question(message, 18)
+                return
+            
+            # Создаем FunctionalityAgent
+            agents = self.get_agents_for_user(user_id)
+            functionality_agent = agents['functionality']
+            
+            # Генерируем функционал
+            generated_functionality = functionality_agent.generate_functionality(portrait)
+            
+            # Убираем Q18 из remaining_questions и сохраняем сгенерированный функционал
+            state = self.active_sessions[user_id]['state']
+            if 18 in state['remaining_questions']:
+                state['remaining_questions'].remove(18)
+            
+            # Сохраняем состояние для обработки дополнений к функционалу
+            state['awaiting_functionality_addition'] = True
+            state['generated_functionality'] = generated_functionality
+            self.active_sessions[user_id]['state'] = state
+            
+            # Получаем данные вопроса
+            question_data = self.db.get_question(18)
+            
+            # Сначала убираем старую клавиатуру от предыдущего вопроса
+            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            
+            # Формируем сообщение
+            text = f"📋 **{question_data['question']}**\n\n"
+            text += f"На основании ваших предыдущих ответов сформирован следующий функционал:\n\n"
+            text += f"{generated_functionality}\n\n"
+            text += f"При необходимости можете добавить еще функции, напишите их. "
+            text += f"Или нажмите \"✅ Принять как есть\", если функционал подходит."
+            
+            # Создаем inline клавиатуру
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="✅ Принять как есть", callback_data=f"func_accept_18")]
+            ])
+            
+            # Отправляем сообщение с inline кнопкой
+            await message.answer(text, reply_markup=keyboard)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в адаптивном Q18: {e}")
+            # Fallback к стандартной логике
+            await self.send_question(message, 18)
+    
+    async def show_missing_p1_options(self, message: Message, user_id: int, session_id: int):
+        """Показать пользователю его ответы на Q8,Q9,Q10 и предложить пересдать"""
+        try:
+            # Получаем ответы пользователя на Q8, Q9, Q10
+            responses = self.db.get_user_responses(user_id, session_id)
+            q8_q9_q10_answers = {}
+            
+            for r in responses:
+                if r['question'] in [8, 9, 10]:
+                    q8_q9_q10_answers[r['question']] = {
+                        'answer': r['answer'],
+                        'final_answer': r['final_answer']
+                    }
+            
+            # Формируем сообщение с текущими ответами
+            text = """❌ Не удалось определить варианты для следующих вопросов на основе ваших предыдущих ответов.
+
+📋 Ваши текущие ответы:"""
+            
+            answers_for_p1 = []
+            for q_num in [8, 9, 10]:
+                if q_num in q8_q9_q10_answers:
+                    answer_info = q8_q9_q10_answers[q_num]
+                    final = answer_info['final_answer'] or answer_info['answer']
+                    text += f"\n• Вопрос {q_num}: {final}"
+                    answers_for_p1.append(final)
+                else:
+                    text += f"\n• Вопрос {q_num}: (нет ответа)"
+                    answers_for_p1.append("не указан")
+            
+            # Добавляем техническую информацию о P1
+            if len(answers_for_p1) == 3:
+                text += f"\n\n⚠️ Комбинация Q8={answers_for_p1[0]}, Q9={answers_for_p1[1]}, Q10={answers_for_p1[2]} не найдена в справочнике P1."
+            
+            text += "\n\n🔄 Предлагаем пересдать вопросы 8-10 для корректного определения вариантов."
+            
+            # Создаем кнопку для пересдачи
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="🔄 Переответить с 8-го вопроса",
+                    callback_data="restart_from_q8"
+                )]
+            ])
+            
+            await message.answer(text, reply_markup=keyboard)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в show_missing_p1_options: {e}")
+            # Fallback - показываем простое сообщение
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="🔄 Переответить с 8-го вопроса",
+                    callback_data="restart_from_q8"
+                )]
+            ])
+            
+            await message.answer(
+                "❌ Не удалось определить варианты ответов.\n\n🔄 Предлагаем пересдать вопросы с 8-го.",
+                reply_markup=keyboard
+            )
     
     def _get_current_datetime(self) -> str:
         """Возвращает текущую дату и время в читаемом формате"""

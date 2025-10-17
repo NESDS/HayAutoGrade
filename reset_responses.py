@@ -23,6 +23,7 @@ def reset_responses_table():
                     answer TEXT,
                     final_answer TEXT,
                     user_state TEXT,
+                    user_portrait TEXT,
                     status TEXT DEFAULT 'active'
                 )
             """)
@@ -30,8 +31,9 @@ def reset_responses_table():
             conn.commit()
             print("✅ Таблица responses пересоздана!")
             print("📝 Структура:")
-            print("   - Одна таблица responses")
+            print("   - Таблица responses: ответы пользователей")
             print("   - Поле user_state для состояний")
+            print("   - Поле user_portrait для описания роли")
             print("   - Поле status для отслеживания статуса ответов")
             print("   - Статусы: 'active', 'inactive'")
             

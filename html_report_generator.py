@@ -56,13 +56,15 @@ class HTMLReportGenerator:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
-            # Получаем ответы пользователя с текстами вопросов
+            # Получаем ответы пользователя с текстами вопросов и разделами
             cursor.execute("""
                 SELECT 
                     r.question as question_id,
                     q.question as question_text,
                     r.answer as full_answer,
-                    r.final_answer as classified_answer
+                    r.final_answer as classified_answer,
+                    q.classifier as has_classifier,
+                    q.section as section
                 FROM responses r
                 JOIN questions q ON r.question = q.id  
                 WHERE r.user = ? AND r.session_id = ? AND r.status = 'active'
@@ -72,12 +74,33 @@ class HTMLReportGenerator:
             results = cursor.fetchall()
             qa_details = []
             
-            for question_id, question_text, full_answer, classified_answer in results:
+            for question_id, question_text, full_answer, classified_answer, has_classifier, section in results:
+                # Показываем classified_answer только если у вопроса есть классификатор
+                display_level = classified_answer if (has_classifier and has_classifier.strip()) else None
+                
+                # Получаем расшифровку Hay, если есть классифицированный ответ
+                hay_definition = None
+                if display_level:
+                    try:
+                        answer_number = int(display_level)
+                        cursor.execute("""
+                            SELECT hay_definition 
+                            FROM hay_dictionary 
+                            WHERE question_number = ? AND answer_number = ?
+                        """, (question_id, answer_number))
+                        result = cursor.fetchone()
+                        if result:
+                            hay_definition = result[0]
+                    except (ValueError, TypeError):
+                        pass  # Если classified_answer не число, пропускаем
+                
                 qa_details.append({
                     "question_id": question_id,
                     "question_text": question_text,
                     "full_answer": full_answer,
-                    "classified_answer": classified_answer
+                    "classified_answer": display_level,
+                    "hay_definition": hay_definition,
+                    "section": section
                 })
             
             return qa_details
@@ -194,28 +217,55 @@ class HTMLReportGenerator:
         # Генерируем строки таблицы с вопросами и ответами (для десктопа)
         qa_rows = ""
         for qa in qa_details:
+            # Формируем текст вопроса с разделом
+            question_html = ""
+            if qa.get('section'):
+                question_html += f'<span class="question-section">{self._escape_html(qa["section"])}</span><br>'
+            question_html += self._escape_html(qa['question_text'])
+            
+            # Формируем ответ с уровнем (если есть)
+            answer_html = self._escape_html(qa['full_answer'])
+            if qa['classified_answer'] and qa['classified_answer'].strip():
+                # Добавляем уровень с расшифровкой Hay
+                level_text = f'Уровень: {qa["classified_answer"]}'
+                if qa.get('hay_definition'):
+                    level_text += f' — {self._escape_html(qa["hay_definition"])}'
+                answer_html += f'<br><br><span class="answer-level-badge">{level_text}</span>'
+            
             qa_rows += f"""
                 <tr>
                     <td class="question-id">#{qa['question_id']}</td>
-                    <td class="question-text">{self._escape_html(qa['question_text'])}</td>
-                    <td class="user-answer">{self._escape_html(qa['full_answer'])}</td>
-                    <td class="answer-level">{qa['classified_answer'] if qa['classified_answer'] else '—'}</td>
+                    <td class="question-text">{question_html}</td>
+                    <td class="user-answer">{answer_html}</td>
                 </tr>
             """
         
         # Генерируем карточки для мобильных устройств
         qa_cards = ""
         for qa in qa_details:
+            # Формируем раздел для мобильной версии
+            section_badge = ""
+            if qa.get('section'):
+                section_badge = f'<div class="qa-card-section">{self._escape_html(qa["section"])}</div>'
+            
+            # Формируем уровень с расшифровкой для мобильной версии
+            level_badge = ""
+            if qa['classified_answer'] and qa['classified_answer'].strip():
+                level_text = f'Уровень: {qa["classified_answer"]}'
+                if qa.get('hay_definition'):
+                    level_text += f' — {self._escape_html(qa["hay_definition"])}'
+                level_badge = f'<span class="answer-level-badge-mobile">{level_text}</span>'
+            
             qa_cards += f"""
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">{qa['question_id']}</span>
                         <span class="qa-card-question">{self._escape_html(qa['question_text'])}</span>
                     </div>
+                    {section_badge}
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
                         <div class="qa-card-answer">{self._escape_html(qa['full_answer'])}</div>
-                        {f'<div class="qa-card-level">Уровень: {qa["classified_answer"]}</div>' if qa['classified_answer'] else ''}
+                        {level_badge}
                     </div>
                 </div>
             """
@@ -480,6 +530,17 @@ class HTMLReportGenerator:
             font-weight: 500;
         }}
         
+        .question-section {{
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }}
+        
         .user-answer {{
             color: #555;
             line-height: 1.6;
@@ -488,7 +549,15 @@ class HTMLReportGenerator:
             padding-left: 15px;
         }}
         
-
+        .answer-level-badge {{
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }}
         
         .footer {{
             background: #f5f5f5;
@@ -536,6 +605,17 @@ class HTMLReportGenerator:
             line-height: 1.5;
         }}
         
+        .qa-card-section {{
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        
         .qa-card-body {{
             padding: 20px;
         }}
@@ -569,14 +649,15 @@ class HTMLReportGenerator:
             border-left: 3px solid #4caf50;
         }}
         
-        .answer-level {{
-            text-align: center;
+        .answer-level-badge-mobile {{
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.85em;
             font-weight: 500;
-            color: #2e7d32;
-            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
-            padding: 8px;
-            border-radius: 6px;
-            width: 120px;
         }}
 
         @media (max-width: 768px) {{
@@ -702,8 +783,7 @@ class HTMLReportGenerator:
                     <tr>
                         <th>№</th>
                         <th>Вопрос</th>
-                        <th>Ваш ответ</th>
-                        <th>Уровень</th>
+                        <th>Ответ</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -11,3 +11,9 @@ requests>=2.28.0
 
 # Дополнительно для Excel файлов (используется pandas)
 openpyxl>=3.0.0
+
+# OpenAI для ChatGPT
+openai>=1.0.0
+
+# Загрузка переменных окружения из .env файла
+python-dotenv>=1.0.0

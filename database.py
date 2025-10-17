@@ -1,12 +1,10 @@
 import sqlite3
 from typing import List, Dict, Optional, Union, Tuple
 import json
-import os
 
 class Database:
     def __init__(self, db_path: str = "data/database.db"):
         self.db_path = db_path
-        self._ensure_tables_exist()
     
 
 
@@ -14,7 +12,11 @@ class Database:
         """Получение вопроса по ID"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM questions WHERE id = ?", (question_id,))
+            cursor.execute("""
+                SELECT id, question, answer_options, verification_instruction, 
+                       classifier, show_conditions, section
+                FROM questions WHERE id = ?
+            """, (question_id,))
             result = cursor.fetchone()
             
             if result:
@@ -23,8 +25,9 @@ class Database:
                     'question': result[1],
                     'answer_options': result[2],
                     'verification_instruction': result[3],
-                    'classifier': result[4] if len(result) > 4 else None,
-                    'show_conditions': result[5] if len(result) > 5 else None
+                    'classifier': result[4],
+                    'show_conditions': result[5],
+                    'section': result[6]
                 }
             return None
     
@@ -32,7 +35,11 @@ class Database:
         """Получение всех вопросов"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM questions ORDER BY id")
+            cursor.execute("""
+                SELECT id, question, answer_options, verification_instruction, 
+                       classifier, show_conditions, section
+                FROM questions ORDER BY id
+            """)
             results = cursor.fetchall()
             
             questions = []
@@ -42,10 +49,56 @@ class Database:
                     'question': result[1],
                     'answer_options': result[2],
                     'verification_instruction': result[3],
-                    'classifier': result[4] if len(result) > 4 else None,
-                    'show_conditions': result[5] if len(result) > 5 else None
+                    'classifier': result[4],
+                    'show_conditions': result[5],
+                    'section': result[6]
                 })
             return questions
+    
+    def get_hay_definition(self, question_number: int, answer_number: int) -> Optional[str]:
+        """Получение определения по Hay для конкретного ответа"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT hay_definition 
+                FROM hay_dictionary 
+                WHERE question_number = ? AND answer_number = ?
+            """, (question_number, answer_number))
+            
+            result = cursor.fetchone()
+            return result[0] if result else None
+    
+    def get_all_hay_definitions(self, question_number: int = None) -> List[Dict]:
+        """
+        Получение всех определений Hay
+        Если указан question_number, возвращает только для этого вопроса
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            if question_number is not None:
+                cursor.execute("""
+                    SELECT question_number, answer_number, hay_definition
+                    FROM hay_dictionary
+                    WHERE question_number = ?
+                    ORDER BY answer_number
+                """, (question_number,))
+            else:
+                cursor.execute("""
+                    SELECT question_number, answer_number, hay_definition
+                    FROM hay_dictionary
+                    ORDER BY question_number, answer_number
+                """)
+            
+            results = cursor.fetchall()
+            definitions = []
+            for result in results:
+                definitions.append({
+                    'question_number': result[0],
+                    'answer_number': result[1],
+                    'hay_definition': result[2]
+                })
+            return definitions
     
     def save_response(self, user: int, session_id: int, question: int, answer: str, final_answer: str = None, user_state: Dict = None, status: str = 'active') -> Tuple[int, List[Dict]]:
         """
@@ -294,68 +347,193 @@ class Database:
         except (json.JSONDecodeError, KeyError, TypeError):
             return True
     
-    def _ensure_tables_exist(self):
-        """Создание таблиц, если они не существуют"""
-        # Создаем директорию data, если её нет
-        data_dir = os.path.dirname(self.db_path)
-        if data_dir and not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-            
+    def get_question_variants(self, question_num: int, p1_value: int, q11_answer: int = None) -> List[Dict]:
+        """
+        Получить варианты ответов для вопроса по значению P1
+        Для Q11: использует только p1_value
+        Для Q12: использует p1_value + q11_answer
+        """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
-            # Создание таблицы questions
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS questions (
-                    id INTEGER PRIMARY KEY,
-                    question TEXT,
-                    answer_options TEXT,
-                    verification_instruction TEXT,
-                    classifier TEXT,
-                    show_conditions TEXT
-                )
-            """)
+            if question_num == 11:
+                # Для Q11 получаем все уникальные варианты Q11 для данного P1
+                cursor.execute("""
+                    SELECT DISTINCT q11_variant_text, q11_answer_value 
+                    FROM question_variants_q11_q12
+                    WHERE p1_value = ?
+                    ORDER BY q11_answer_value
+                """, (p1_value,))
+                
+                results = cursor.fetchall()
+                variants = []
+                for variant_text, answer_value in results:
+                    variants.append({
+                        'variant_text': variant_text,
+                        'answer_value': answer_value
+                    })
+                
+            elif question_num == 12:
+                # Для Q12 нужен ответ на Q11
+                if q11_answer is None:
+                    print(f"⚠️ Для Q12 нужен ответ на Q11")
+                    return []
+                
+                # Получаем варианты Q12 для данного P1 и ответа Q11
+                cursor.execute("""
+                    SELECT q12_variant_text, q12_answer_value 
+                    FROM question_variants_q11_q12
+                    WHERE p1_value = ? AND q11_answer_value = ?
+                    ORDER BY q12_answer_value
+                """, (p1_value, q11_answer))
+                
+                results = cursor.fetchall()
+                variants = []
+                for variant_text, answer_value in results:
+                    variants.append({
+                        'variant_text': variant_text,
+                        'answer_value': answer_value
+                    })
+            else:
+                # Для других вопросов возвращаем пустой список
+                print(f"⚠️ Адаптивные варианты доступны только для Q11 и Q12")
+                return []
             
-            # Создание таблицы responses
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS responses (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user INTEGER,
-                    session_id INTEGER,
-                    question INTEGER,
-                    answer TEXT,
-                    final_answer TEXT,
-                    user_state TEXT
-                )
-            """)
+            return variants
+    
+    def has_single_variant(self, question_num: int, p1_value: int, q11_answer: int = None) -> bool:
+        """Проверить, есть ли только один вариант для данного P1 (и Q11 для вопроса 12)"""
+        variants = self.get_question_variants(question_num, p1_value, q11_answer)
+        return len(variants) == 1
+    
+    def get_user_answers_subset(self, user_id: int, session_id: int, question_ids: List[int]) -> Dict[int, int]:
+        """
+        Получить ответы пользователя только на указанные вопросы
+        Возвращает: {question_id: final_answer_as_int}
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
             
-            # Создание таблицы conflicts
+            # Формируем запрос с плейсхолдерами для IN clause
+            placeholders = ','.join('?' * len(question_ids))
+            cursor.execute(f"""
+                SELECT question, final_answer 
+                FROM responses 
+                WHERE user = ? AND session_id = ? AND status = 'active' 
+                  AND question IN ({placeholders})
+                ORDER BY question
+            """, [user_id, session_id] + question_ids)
+            
+            results = cursor.fetchall()
+            answers = {}
+            
+            for question_id, final_answer in results:
+                # Преобразуем final_answer в числовое значение
+                try:
+                    answers[question_id] = int(final_answer)
+                except (ValueError, TypeError):
+                    # Если не удается преобразовать, пропускаем
+                    continue
+                    
+            return answers
+    
+    def reset_questions_from_8(self, user_id: int, session_id: int) -> None:
+        """
+        Деактивировать ответы на вопросы 8-12 и добавить их обратно в remaining_questions
+        1. UPDATE responses SET status='inactive' WHERE question IN (8,9,10,11,12)
+        2. Добавить 8,9,10,11,12 в remaining_questions текущего состояния
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            # 1. Деактивируем ответы на вопросы 8-12
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS conflicts (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    question1_id INTEGER NOT NULL,
-                    answer1_id INTEGER NOT NULL, 
-                    question1_text TEXT NOT NULL,
-                    answer1_text TEXT NOT NULL,
-                    question2_id INTEGER NOT NULL,
-                    answer2_id INTEGER NOT NULL,
-                    question2_text TEXT NOT NULL,
-                    answer2_text TEXT NOT NULL,
-                    question3_id INTEGER,
-                    answer3_id INTEGER,
-                    question3_text TEXT,
-                    answer3_text TEXT,
-                    question4_id INTEGER,
-                    answer4_id INTEGER,
-                    question4_text TEXT,
-                    answer4_text TEXT,
-                    question5_id INTEGER,
-                    answer5_id INTEGER,
-                    question5_text TEXT,
-                    answer5_text TEXT
-                )
-            """)
+                UPDATE responses 
+                SET status = 'inactive' 
+                WHERE user = ? AND session_id = ? AND question IN (8, 9, 10, 11, 12)
+            """, (user_id, session_id))
             
             conn.commit()
+        
+        # 2. Обновляем состояние пользователя - добавляем вопросы обратно в remaining
+        state = self.get_user_state(user_id, session_id)
+        if state and 'remaining_questions' in state:
+            # Добавляем вопросы 8-12, если их еще нет в remaining
+            questions_to_add = [8, 9, 10, 11, 12]
+            existing_ids = state['remaining_questions']
+            
+            for question_id in questions_to_add:
+                if question_id not in existing_ids:
+                    existing_ids.append(question_id)
+            
+            # Сортируем для правильного порядка
+            state['remaining_questions'] = sorted(existing_ids)
+            
+            # Сохраняем обновленное состояние
+            self.save_user_state(user_id, session_id, state)
+    
+    def update_session_portrait(self, user_id: int, session_id: int, portrait: str) -> None:
+        """Обновляет портрет пользователя в последней записи сессии"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE responses 
+                SET user_portrait = ?
+                WHERE user = ? AND session_id = ? AND id = (
+                    SELECT MAX(id) FROM responses 
+                    WHERE user = ? AND session_id = ?
+                )
+            """, (portrait, user_id, session_id, user_id, session_id))
+            conn.commit()
+    
+    def get_session_portrait(self, user_id: int, session_id: int) -> Optional[str]:
+        """Получает портрет пользователя для сессии"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT user_portrait FROM responses 
+                WHERE user = ? AND session_id = ? AND user_portrait IS NOT NULL
+                ORDER BY id DESC LIMIT 1
+            """, (user_id, session_id))
+            
+            result = cursor.fetchone()
+            return result[0] if result and result[0] else None
+    
+    def generate_user_portrait(self, user_id: int, session_id: int) -> Optional[str]:
+        """
+        Генерирует портрет пользователя на основе активных ответов сессии
+        Формат: Вопрос - Полный ответ - Уровень с описанием
+        """
+        # Получаем все активные ответы текущей сессии
+        responses = self.get_user_responses(user_id, session_id, only_active=True)
+        
+        if not responses:
+            return None
+        
+        # Формируем структурированный портрет без LLM
+        portrait_parts = []
+        for response in responses:
+            question_data = self.get_question(response['question'])
+            if question_data:
+                question_text = question_data['question']
+                full_answer = response['answer']  # Полный ответ пользователя
+                level = response['final_answer'] or response['answer']  # Уровень/классификация
+                
+                # Формат: Вопрос N: [текст вопроса] → Ответ: [полный ответ] → Уровень: [final_answer]
+                portrait_line = f"Вопрос {response['question']}: {question_text}\n→ Ответ: {full_answer}\n→ Уровень: {level}"
+                portrait_parts.append(portrait_line)
+        
+        if not portrait_parts:
+            return None
+            
+        # Объединяем все части с разделителем
+        portrait = "\n\n".join(portrait_parts)
+        
+        # Сохраняем портрет в БД
+        self.update_session_portrait(user_id, session_id, portrait)
+        
+        return portrait
+    
+
 
  

@@ -11,7 +11,8 @@ with sqlite3.connect("data/database.db") as conn:
             answer_options TEXT,
             verification_instruction TEXT,
             classifier TEXT,
-            show_conditions TEXT
+            show_conditions TEXT,
+            section TEXT
         )
     """)
     
@@ -19,15 +20,16 @@ with sqlite3.connect("data/database.db") as conn:
     
     for _, row in df.iterrows():
         cursor.execute("""
-            INSERT INTO questions (id, question, answer_options, verification_instruction, classifier, show_conditions)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO questions (id, question, answer_options, verification_instruction, classifier, show_conditions, section)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             row['ID'], 
             row['Вопрос'], 
             row.get('Варианты_ответов'),
             row['Инструкция_проверки'], 
             row.get('Классификатор'),
-            row.get('Условия_показа')
+            row.get('Условия_показа'),
+            row.get('Раздел')
         ))
     
     conn.commit() 

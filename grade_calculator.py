@@ -216,8 +216,42 @@ class GradeCalculator:
                     "low": result[0],
                     "mid": result[1], 
                     "high": result[2],
-                    "grade": result[3] if result[3] else f"Grade {result[1]}"
+                    "grade": result[3] if result[3] else "—"
                 }
+            return None
+    
+    def calculate_intermediate_p1(self, user_id: int, session_id: int) -> Optional[int]:
+        """
+        Промежуточный расчёт P1 для определения вариантов вопросов 11 и 12
+        
+        Используется после ответа на 10-й вопрос для выбора адаптивных вариантов.
+        Возвращает значение P1 или None при ошибке.
+        """
+        try:
+            # Получаем ответы пользователя на вопросы 8, 9, 10
+            user_answers = self._get_user_answers(user_id, session_id)
+            
+            # Проверяем, что есть ответы на нужные вопросы
+            required_questions = {8, 9, 10}
+            available_questions = set(user_answers.keys())
+            
+            if not required_questions.issubset(available_questions):
+                missing = required_questions - available_questions
+                print(f"⚠️ Не хватает ответов на вопросы: {missing}")
+                return None
+            
+            # Вычисляем P1 используя существующую логику
+            p1_value = self._calculate_p1(user_answers)
+            
+            if p1_value is not None:
+                print(f"✅ Промежуточный P1 = {p1_value}")
+            else:
+                print("❌ Не удалось вычислить P1")
+                
+            return p1_value
+            
+        except Exception as e:
+            print(f"❌ Ошибка при расчёте промежуточного P1: {str(e)}")
             return None
 
 # Пример использования
