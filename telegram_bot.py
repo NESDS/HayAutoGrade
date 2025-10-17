@@ -284,9 +284,9 @@ class TelegramBot:
         # Генерируем промпт для объяснения конфликта
         explanation_prompt = detector.generate_conflict_explanation(conflict)
         
-        # Получаем объяснение от LLM
+        # Получаем объяснение от LLM (используем task_type='explanation' для более креативного ответа)
         messages = [{"role": "user", "content": explanation_prompt}]
-        explanation = llm.generate_response(messages)
+        explanation = llm.generate_response(messages, task_type='explanation')
         
         print("📥 КОНФЛИКТАТОР - Получен ответ от LLM:")
         print("-" * 50)

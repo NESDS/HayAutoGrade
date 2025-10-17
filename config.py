@@ -19,9 +19,42 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5-chat-latest")
 OPENAI_API_URL = os.getenv("OPENAI_API_URL", "https://api.openai.com/v1/chat/completions")
 
-# Настройки верификации
-VERIFICATION_TEMPERATURE = float(os.getenv("VERIFICATION_TEMPERATURE", "0.3"))
-VERIFICATION_MAX_TOKENS = int(os.getenv("VERIFICATION_MAX_TOKENS", "10000"))
+# Настройки для разных типов задач LLM
+# Обе модели (GigaChat и OpenAI) используют одинаковые настройки для каждой задачи
+
+LLM_TASK_SETTINGS = {
+    # Верификация ответов - требует высокой точности
+    'verification': {
+        'temperature': 0.2,
+        'max_tokens': 8000
+    },
+    
+    # Классификация - требует точности и краткости
+    'classification': {
+        'temperature': 0.1,
+        'max_tokens': 500
+    },
+    
+    # Компиляция ответов - баланс точности и структурированности
+    'compilation': {
+        'temperature': 0.3,
+        'max_tokens': 5000
+    },
+    
+    # Объяснение конфликтов - может быть более креативным
+    'explanation': {
+        'temperature': 0.5,
+        'max_tokens': 3000
+    },
+    
+    # Функциональный анализ - требует точности
+    'functionality': {
+        'temperature': 0.2,
+        'max_tokens': 4000
+    }
+}
+
+# Включение AI верификации
 ENABLE_AI_VERIFICATION = os.getenv("ENABLE_AI_VERIFICATION", "True").lower() in ("true", "1", "yes")
 
 

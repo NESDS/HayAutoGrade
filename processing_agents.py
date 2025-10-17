@@ -36,7 +36,7 @@ class VerificationAgent:
         print("-" * 50)
         
         messages = [{"role": "user", "content": prompt}]
-        response = self.llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages, task_type='verification')
         
         print("✅ ОТВЕТ LLM:")
         print(response)
@@ -88,7 +88,7 @@ class AnswerCompilerAgent:
         print("-" * 50)
 
         messages = [{"role": "user", "content": prompt}]
-        response = self.llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages, task_type='compilation')
         
         print("✅ ОТВЕТ LLM:")
         print(response)
@@ -131,7 +131,7 @@ class ClassificationAgent:
         print("-" * 50)
         
         messages = [{"role": "user", "content": prompt}]
-        response = self.llm_service.generate_response(messages)
+        response = self.llm_service.generate_response(messages, task_type='classification')
         
         print("✅ ОТВЕТ LLM (КЛАССИФИКАЦИЯ):")
         print(response)
@@ -188,7 +188,7 @@ class FunctionalityAgent:
                 }
             ]
             
-            functionality = self.llm_service.generate_response(messages)
+            functionality = self.llm_service.generate_response(messages, task_type='functionality')
             
             # Убираем возможные лишние элементы форматирования
             functionality = functionality.strip()

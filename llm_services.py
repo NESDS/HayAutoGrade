@@ -11,15 +11,21 @@ from typing import List, Dict
 from config import (
     GIGACHAT_AUTH, GIGACHAT_SCOPE, GIGACHAT_API_URL, GIGACHAT_TOKEN_URL, GIGACHAT_MODEL,
     OPENAI_API_KEY, OPENAI_MODEL, OPENAI_API_URL,
-    VERIFICATION_TEMPERATURE, VERIFICATION_MAX_TOKENS
+    LLM_TASK_SETTINGS
 )
 
 class BaseLLMService(ABC):
     """Базовый класс для всех LLM сервисов"""
     
     @abstractmethod
-    def generate_response(self, messages: List[Dict]) -> str:
-        """Генерация ответа от LLM"""
+    def generate_response(self, messages: List[Dict], task_type: str = 'verification') -> str:
+        """
+        Генерация ответа от LLM
+        
+        Args:
+            messages: Список сообщений для LLM
+            task_type: Тип задачи ('verification', 'classification', 'compilation', 'explanation', 'functionality')
+        """
         pass
     
     @property
@@ -45,9 +51,12 @@ class GigaChatService(BaseLLMService):
     def emoji(self) -> str:
         return "🇷🇺"
     
-    def generate_response(self, messages: List[Dict]) -> str:
+    def generate_response(self, messages: List[Dict], task_type: str = 'verification') -> str:
         """Генерация ответа через ГигаЧат с получением нового токена"""
         try:
+            # Получаем настройки для типа задачи
+            settings = LLM_TASK_SETTINGS.get(task_type, LLM_TASK_SETTINGS['verification'])
+            
             # Получаем токен
             token_headers = {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -77,8 +86,8 @@ class GigaChatService(BaseLLMService):
             payload = {
                 "model": GIGACHAT_MODEL,
                 "messages": messages,
-                "temperature": VERIFICATION_TEMPERATURE,
-                "max_tokens": VERIFICATION_MAX_TOKENS,
+                "temperature": settings['temperature'],
+                "max_tokens": settings['max_tokens'],
                 "stream": False
             }
             
@@ -106,9 +115,12 @@ class OpenAIService(BaseLLMService):
     def emoji(self) -> str:
         return "🇺🇸"
     
-    def generate_response(self, messages: List[Dict]) -> str:
+    def generate_response(self, messages: List[Dict], task_type: str = 'verification') -> str:
         """Генерация ответа через OpenAI API"""
         try:
+            # Получаем настройки для типа задачи
+            settings = LLM_TASK_SETTINGS.get(task_type, LLM_TASK_SETTINGS['verification'])
+            
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {OPENAI_API_KEY}'
@@ -117,8 +129,8 @@ class OpenAIService(BaseLLMService):
             payload = {
                 "model": OPENAI_MODEL,
                 "messages": messages,
-                "temperature": VERIFICATION_TEMPERATURE,
-                "max_tokens": VERIFICATION_MAX_TOKENS
+                "temperature": settings['temperature'],
+                "max_tokens": settings['max_tokens']
             }
             
             response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
