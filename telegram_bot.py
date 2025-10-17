@@ -274,10 +274,12 @@ class TelegramBot:
                             conflict: Dict, state: Dict):
         """Обработка обнаруженного конфликта"""
         from conflictator import ConflictDetector
-        from llm_service import LLMService
         
         detector = ConflictDetector(self.db)
-        llm = LLMService()
+        
+        # Получаем LLM сервис из состояния сессии
+        llm_type = state.get('llm_type', 'gigachat')
+        llm = LLMFactory.create_service(llm_type)
         
         # Генерируем промпт для объяснения конфликта
         explanation_prompt = detector.generate_conflict_explanation(conflict)
