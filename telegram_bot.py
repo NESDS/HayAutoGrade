@@ -226,6 +226,16 @@ class TelegramBot:
             # Сохраняем обновленное состояние
             self.db.save_user_state(user_id, session_id, state)
             
+            # Если есть классификатор, показываем уровень пользователю
+            if question_data.get('classifier'):
+                try:
+                    level_number = int(final_answer)
+                    hay_description = self.db.get_hay_level_description(current_question, level_number)
+                    if hay_description:
+                        await message.answer(f"📊 Определён уровень {level_number}: {hay_description}")
+                except (ValueError, TypeError):
+                    pass  # Если final_answer не число, пропускаем
+            
             await self.next_question(message, user_id, session_id)
         else:
             # Получаем портрет пользователя для контекста
@@ -267,7 +277,20 @@ class TelegramBot:
                 # Сохраняем обновленное состояние
                 self.db.save_user_state(user_id, session_id, state)
                 
-                await message.answer(f"✅ Принято! {response_text}")
+                # Формируем ответ с уровнем HAY если есть классификатор
+                response_message = f"✅ Принято! {response_text}"
+                
+                # Если есть классификатор, показываем уровень
+                if question_data.get('classifier'):
+                    try:
+                        level_number = int(final_answer)
+                        hay_description = self.db.get_hay_level_description(current_question, level_number)
+                        if hay_description:
+                            response_message += f"\n\n📊 Определён уровень {level_number}: {hay_description}"
+                    except (ValueError, TypeError):
+                        pass  # Если final_answer не число, пропускаем
+                
+                await message.answer(response_message)
                 await self.next_question(message, user_id, session_id)
             else:
                 # Добавляем вопрос бота в conversation и обновляем состояние

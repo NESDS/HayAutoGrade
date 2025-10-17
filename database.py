@@ -534,6 +534,17 @@ class Database:
         
         return portrait
     
+    def get_hay_level_description(self, question_number: int, answer_number: int) -> Optional[str]:
+        """Получает описание уровня HAY из справочника"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT hay_definition 
+                FROM hay_dictionary 
+                WHERE question_number = ? AND answer_number = ?
+            """, (question_number, answer_number))
+            result = cursor.fetchone()
+            return result[0] if result else None
 
 
  
