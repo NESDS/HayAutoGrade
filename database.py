@@ -100,9 +100,13 @@ class Database:
                 })
             return definitions
     
-    def save_response(self, user: int, session_id: int, question: int, answer: str, final_answer: str = None, user_state: Dict = None, status: str = 'active') -> Tuple[int, List[Dict]]:
+    def save_response(self, user: int, session_id: int, question: int, answer: str, final_answer: str = None, user_state: Dict = None, status: str = 'active', check_conflicts: bool = True) -> Tuple[int, List[Dict]]:
         """
-        Сохранение ответа в базу данных + проверка конфликтов
+        Сохранение ответа в базу данных + опциональная проверка конфликтов
+        
+        Args:
+            check_conflicts: Проверять ли конфликты после сохранения (только для вопросов с классификатором)
+        
         Возвращает: (response_id, список_конфликтов)
         """
         user_state_json = json.dumps(user_state, ensure_ascii=False) if user_state else None
@@ -125,14 +129,16 @@ class Database:
             conn.commit()
             response_id = cursor.lastrowid
         
-        # Проверяем конфликты после сохранения ответа
-        from conflictator import ConflictDetector
-        detector = ConflictDetector(self)
-        conflicts = detector.check_conflicts_after_answer(user, session_id, question, final_answer or answer)
-        
-        # Если есть конфликты, помечаем участвующие ответы как 'conflicted'
-        if conflicts:
-            self._mark_responses_as_conflicted(user, session_id, conflicts)
+        # Проверяем конфликты только если нужно (для вопросов с классификатором)
+        conflicts = []
+        if check_conflicts:
+            from conflictator import ConflictDetector
+            detector = ConflictDetector(self)
+            conflicts = detector.check_conflicts_after_answer(user, session_id, question, final_answer or answer)
+            
+            # Если есть конфликты, помечаем участвующие ответы как 'conflicted'
+            if conflicts:
+                self._mark_responses_as_conflicted(user, session_id, conflicts)
         
         return response_id, conflicts
     

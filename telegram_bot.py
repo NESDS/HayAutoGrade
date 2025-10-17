@@ -210,11 +210,19 @@ class TelegramBot:
             
             final_answer = classification_agent.classify_answer(question_data, user_answer, portrait)
             
-            # Сначала сохраняем ответ в БД без обновленного state
-            self.db.save_response(user_id, session_id, current_question, user_answer, final_answer, None)
+            # Сохраняем ответ в БД и проверяем конфликты (только для вопросов с классификатором)
+            has_classifier = bool(question_data.get('classifier'))
+            response_id, conflicts = self.db.save_response(user_id, session_id, current_question, user_answer, final_answer, None, check_conflicts=has_classifier)
             
             # Генерируем/обновляем портрет пользователя
             self.db.generate_user_portrait(user_id, session_id)
+            
+            # Обрабатываем конфликты если они найдены
+            if conflicts:
+                # Берем первый конфликт (может быть только один)
+                first_conflict = conflicts[0]
+                await self.handle_conflict(message, user_id, session_id, first_conflict, state)
+                return  # Прекращаем обработку, конфликт обнаружен
             
             # Теперь пересчитываем список оставшихся вопросов с учетом нового ответа
             state['remaining_questions'] = self.db.get_remaining_questions(user_id, session_id)
@@ -253,14 +261,15 @@ class TelegramBot:
                 full_answer = answer_agent.create_full_answer(question_data, state['conversation'], portrait)
                 final_answer = classification_agent.classify_answer(question_data, full_answer, portrait)
                 
-                # Сначала сохраняем ответ в БД без обновленного state + проверяем конфликты
+                # Сохраняем ответ в БД и проверяем конфликты (только для вопросов с классификатором)
                 # В поле answer записываем полный ответ из диалога, а не только последнее сообщение
-                response_id, conflicts = self.db.save_response(user_id, session_id, current_question, full_answer, final_answer, None)
+                has_classifier = bool(question_data.get('classifier'))
+                response_id, conflicts = self.db.save_response(user_id, session_id, current_question, full_answer, final_answer, None, check_conflicts=has_classifier)
                 
                 # Генерируем/обновляем портрет пользователя
                 self.db.generate_user_portrait(user_id, session_id)
                 
-                # Проверяем конфликты
+                # Обрабатываем конфликты если они найдены
                 if conflicts:
                     # Берем первый конфликт (может быть только один)
                     first_conflict = conflicts[0]
@@ -331,12 +340,12 @@ class TelegramBot:
             # Получаем уровень из response_map
             if question_id in response_map:
                 user_response = response_map[question_id]
-                level = user_response['final_answer']
+                level = user_response.get('final_answer', '')
                 
                 conflict_details += f"**{i}. Вопрос {question_id}:** {question_text}\n"
                 
                 # Показываем уровень и общее описание
-                if level and level.isdigit():
+                if level and str(level).isdigit():
                     level_num = int(level)
                     conflict_details += f"   ├─ 🔢 Уровень {level_num}"
                     
@@ -353,6 +362,8 @@ class TelegramBot:
                             conflict_details += f"   └─ 📊 HAY: _{hay_desc[:100]}{'...' if len(hay_desc) > 100 else ''}_\n"
                     except (ValueError, TypeError):
                         pass
+                else:
+                    conflict_details += f"   └─ (уровень не определён)\n"
                 
                 conflict_details += "\n"
         
@@ -699,8 +710,8 @@ class TelegramBot:
                 else:
                     functionality = "Функционал принят как есть"
                 
-                # Сохраняем как ответ на вопрос 18
-                self.db.save_response(user_id, session_id, 18, functionality, functionality, None)
+                # Сохраняем как ответ на вопрос 18 (без проверки конфликтов - у Q18 нет классификатора)
+                self.db.save_response(user_id, session_id, 18, functionality, functionality, None, check_conflicts=False)
                 
                 # Обновляем портрет пользователя
                 self.db.generate_user_portrait(user_id, session_id)
@@ -738,8 +749,8 @@ class TelegramBot:
             # Объединяем сгенерированный функционал с дополнениями пользователя
             full_functionality = f"{generated_functionality}\n\n**Дополнения:**\n{addition_text}"
             
-            # Сохраняем объединенный функционал как ответ на вопрос 18
-            self.db.save_response(user_id, session_id, 18, full_functionality, full_functionality, None)
+            # Сохраняем объединенный функционал как ответ на вопрос 18 (без проверки конфликтов)
+            self.db.save_response(user_id, session_id, 18, full_functionality, full_functionality, None, check_conflicts=False)
             
             # Обновляем портрет пользователя
             self.db.generate_user_portrait(user_id, session_id)
