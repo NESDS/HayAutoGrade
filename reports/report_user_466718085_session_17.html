@@ -1,0 +1,919 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет по опросу - Пользователь 466718085</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .grade-section {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .grade-section.error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        
+        .grade-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        
+        .grade-value {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .grade-range {
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        
+        .calculation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .calc-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .calc-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .calc-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .error-details {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .error-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            font-size: 1em;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+        
+        .diagnostic-list {
+            margin-top: 15px;
+        }
+        
+        .diagnostic-item {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            font-size: 0.95em;
+            line-height: 1.4;
+            border-left: 3px solid rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            border-radius: 2px;
+        }
+        
+        .qa-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .qa-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        
+        .qa-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .qa-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .qa-table tr:hover {
+            background-color: #f8f9ff;
+            transition: background-color 0.3s ease;
+        }
+        
+        .question-id {
+            font-weight: bold;
+            color: #2196F3;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .question-text {
+            color: #333;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        
+        .question-section {
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .user-answer {
+            color: #555;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            padding-left: 15px;
+        }
+        
+        .answer-level-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .qa-card {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border-left: 5px solid #2196F3;
+        }
+        
+        .qa-card-header {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .qa-card-number {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 15px;
+        }
+        
+        .qa-card-question {
+            display: inline;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+        
+        .qa-card-section {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .qa-card-body {
+            padding: 20px;
+        }
+        
+        .qa-card-answer-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .qa-card-answer {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #2196F3;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .qa-card-level {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #2e7d32;
+            font-weight: 500;
+            border-left: 3px solid #4caf50;
+        }
+        
+        .answer-level-badge-mobile {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header .subtitle {
+                font-size: 0.95em;
+            }
+            
+            .grade-section {
+                padding: 30px 20px;
+            }
+            
+            .grade-value {
+                font-size: 3em;
+            }
+            
+            .calculation-details {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 15px;
+            }
+            
+            .calc-item {
+                padding: 12px;
+            }
+            
+            .calc-value {
+                font-size: 1.3em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .section-title {
+                font-size: 1.5em;
+            }
+            
+            /* Скрываем таблицу на мобильных */
+            .qa-table {
+                display: none;
+            }
+            
+            /* Показываем карточки на мобильных */
+            .qa-card {
+                display: block;
+            }
+            
+            .error-details {
+                padding: 15px;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.7em;
+            }
+            
+            .grade-value {
+                font-size: 2.5em;
+            }
+            
+            .calculation-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .qa-card {
+                margin-bottom: 15px;
+                border-radius: 12px;
+            }
+            
+            .qa-card-header {
+                padding: 12px 15px;
+            }
+            
+            .qa-card-body {
+                padding: 15px;
+            }
+            
+            .qa-card-number {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+                font-size: 0.8em;
+                margin-right: 10px;
+            }
+            
+            .qa-card-question {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Отчет по опросу</h1>
+            <div class="subtitle">Пользователь #466718085 | Сессия #17 | 17.10.2025 16:33</div>
+        </div>
+        
+        <div class="grade-section">
+            
+            <div class="grade-title">Ваш результат</div>
+            <div class="grade-value">12.0</div>
+            <div class="grade-range">Диапазон: 519-613</div>
+            
+            <div class="calculation-details">
+                <div class="calc-item">
+                    <div class="calc-label">Параметр P1</div>
+                    <div class="calc-value">304</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-label">Параметр P2</div>
+                    <div class="calc-value">38</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-label">Параметр P3</div>
+                    <div class="calc-value">115</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-label">Параметр P4</div>
+                    <div class="calc-value">132</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-label">Итого P</div>
+                    <div class="calc-value">551</div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="content">
+            <h2 class="section-title">Вопросы и ответы</h2>
+            
+            <!-- Таблица для десктопа -->
+            <table class="qa-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Вопрос</th>
+                        <th>Ответ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr>
+                    <td class="question-id">#1</td>
+                    <td class="question-text"><span class="question-section">Должность</span><br>Укажите точное название должности, которую мы оцениваем</td>
+                    <td class="user-answer">Правильное название должности — **руководитель направления**, хотя фактически соответствует уровню **Senior Developer**.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#2</td>
+                    <td class="question-text"><span class="question-section">Цель роли</span><br>Сформулируйте главную цель этой роли. Какую основную ценность она создает для организации?</td>
+                    <td class="user-answer">Главная цель данной роли — разработка и внедрение AI-агентов для повышения операционной эффективности бизнеса и улучшения качества предоставляемых услуг.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#3</td>
+                    <td class="question-text"><span class="question-section">Структура</span><br>Опишите полную иерархию структурных подразделений, к которым относится эта роль, начиная с высшего уровня. Требуется указать минимум два уровня. Перечисляйте подразделения через запятую, от высшего к низшему.
+
+Пример: Департамент информационных технологий, Управление разработки, Отдел бэкенд-разработки</td>
+                    <td class="user-answer">Дирекция по экосистеме юридических лиц, Корпоративное управление, Инструменты и данные</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#4</td>
+                    <td class="question-text"><span class="question-section">Должность руководителя</span><br>Укажите точную должность вашего непосредственного руководителя. Название должно соответствовать организационной структуре компании</td>
+                    <td class="user-answer">Название должности моего непосредственного руководителя: **начальник отдела**.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#5</td>
+                    <td class="question-text"><span class="question-section">Уровень образования</span><br>Укажите минимальный уровень образования, необходимый для выполнения функциональных обязанностей на этой должности</td>
+                    <td class="user-answer">Высшее образование - бакалавриат</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#6</td>
+                    <td class="question-text"><span class="question-section">Дополнительное образование</span><br>Требуется ли для данной должности дополнительное профильное образование? Если да, укажите, какие именно программы необходимы и их статус (обязательные или рекомендуемые)</td>
+                    <td class="user-answer">Да, требуется. Обязательные: курсы по LangChain, LangGraph, OpenAI API и работе с LLM.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#7</td>
+                    <td class="question-text"><span class="question-section">Специализированные знания</span><br>Какие специализированные знания и навыки необходимы для выполнения обязанностей на этой должности? Укажите:
+
+Языки (с уровнем владения, если требуется)
+Отраслевые знания (финансы, право, IT и др.)
+Технические навыки (ПО, инструменты)
+Другие критичные требования</td>
+                    <td class="user-answer">Специализированные знания и навыки:
+
+### Языки:
+- Python (Advanced)
+- Английский (Средний)
+
+### Отраслевые знания:
+- Машинное обучение (Machine Learning)
+- Обработка естественного языка (NLP)
+- Архитектура больших языковых моделей (LLM)
+- Prompt Engineering
+- Retrieval Augmented Generation (RAG)-системы
+
+### Технические навыки:
+- LangChain
+- LangGraph
+- OpenAI API
+- Векторные базы данных (Vector Databases)
+- Docker
+- Git
+- CI/CD
+
+### Другие критичные требования:
+- Управление командой разработчиков
+- Code Review
+- Планирование спринтов
+- Оценка задач</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#8</td>
+                    <td class="question-text"><span class="question-section">Взаимодействие и коммуникация</span><br>Опишите уровень взаимодействия с людьми, требуемый для этой должности. Укажите, с какими именно группами людей происходит взаимодействие, какова цель этого взаимодействия, его регулярность и интенсивность</td>
+                    <td class="user-answer">Уровень взаимодействия высокий.  
+Ежедневно взаимодействует с командой разработчиков (5–7 человек): постановка задач, менторинг, code review.  
+Еженедельно встречается с Product Owner.  
+Регулярно координирует работу с другими командами (backend, frontend, DevOps).  
+Раз в месяц представляет результаты работы топ-менеджменту.<br><br><span class="answer-level-badge">Уровень: 3 — 3. Убеждение</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#9</td>
+                    <td class="question-text"><span class="question-section">Умение планировать, организовывать</span><br>Опишите уровень планирования и организации для этой роли: какие временные горизонты планирования охватывает работа, характер выполняемых задач, степень контроля над ресурсами и уровень самостоятельности в определении приоритетов и методов работы</td>
+                    <td class="user-answer">Уровень планирования и организации включает организацию двухнедельных спринтов, распределение задач среди команды разработчиков, контроль полного цикла разработки AI-агентов: от проектирования архитектуры до тестирования и деплоя. Самостоятельный выбор приоритетов и методов работы, высокая ответственность за ресурсы и результативность команды.<br><br><span class="answer-level-badge">Уровень: 3 — II. Однородные</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#10</td>
+                    <td class="question-text"><span class="question-section">Знания умения (необходимые умения)</span><br>Какой уровень экспертизы и глубины знаний требуется для этой должности?</td>
+                    <td class="user-answer">Требуется глубокая экспертиза в AI и LLM, опыт разработки от 5 лет (включая 2 года с AI-агентами), знание нейросетей, fine-tuning, RAG-архитектур и ML Ops, способность выбирать оптимальные технические решения и обучать команду.<br><br><span class="answer-level-badge">Уровень: 5 — E. Профессиональные</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#11</td>
+                    <td class="question-text"><span class="question-section">Область решаемых вопросов</span><br>Опишите степень свободы мышления, требуемую для решения задач на этой должности. Укажите, работа выполняется по строгим инструкциям, в рамках общих правил с выбором подходов или требует самостоятельного определения методов достижения целей</td>
+                    <td class="user-answer">4. Управление методами. Известно &quot;что&quot; делать, свобода в выборе &quot;как&quot;. Разработка процедур под задачи.<br><br><span class="answer-level-badge">Уровень: 4 — D. Нормативная</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#12</td>
+                    <td class="question-text"><span class="question-section">Сложность решаемых вопросов</span><br>Опишите, насколько часто и в каких ситуациях от сотрудника требуются нестандартные подходы, создание новых методов работы или принципиально иных решений</td>
+                    <td class="user-answer">Вариант 4<br><br><span class="answer-level-badge">Уровень: 4 — 4. Нестандартные вопросы</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#13</td>
+                    <td class="question-text"><span class="question-section">Тип влияния</span><br>Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+
+Например:
+Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</td>
+                    <td class="user-answer">Да, разработанные AI-агенты позволили сэкономить компании около 100 млн рублей в год на операционных расходах.<br><br><span class="answer-level-badge">Уровень: 3 — 3. Незначительная</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#14</td>
+                    <td class="question-text"><span class="question-section">Тип влияния</span><br>Опишите масштаб влияния этой должности в компании: какие области деятельности, процессы или результаты работы других сотрудников/подразделений зависят от решений и действий в этой роли, и как именно ваша работа влияет на смежные отделы или компанию в целом</td>
+                    <td class="user-answer">Высокий уровень влияния: обеспечение полного цикла разработки и внедрения AI-агентов, прямое влияние на сокращение операционных расходов и получение измеримого экономического эффекта порядка 100 млн рублей ежегодно.<br><br><span class="answer-level-badge">Уровень: 4 — 4. Прямое/Основное</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#16</td>
+                    <td class="question-text"><span class="question-section">Свобода действий</span><br>Опишите степень полномочий при принятии решений для этой должности: какие типы решений могут приниматься самостоятельно, какие требуют согласования, в рамках каких бюджетных или ресурсных ограничений происходит работа и как организован контроль за принимаемыми решениями</td>
+                    <td class="user-answer">Степень самостоятельности высокая: 
+- Принятие решений по архитектуре, технологиям и формированию команды.
+- Внутри команды фиксированный объем ресурсов, отдельного бюджета нет.
+
+Контроль:
+- Осуществляется начальником отдела.
+- Форма контроля: еженедельное предоставление статуса работ.<br><br><span class="answer-level-badge">Уровень: 4 — D. Регулируемая в целом</span></td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#17</td>
+                    <td class="question-text"><span class="question-section">Контроль конечных результатов</span><br>Опишите, как организован контроль конечных результатов для этой должности: с какой периодичностью оценивается результат работы, кто осуществляет контроль ?</td>
+                    <td class="user-answer">Месяц - квартал</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#18</td>
+                    <td class="question-text"><span class="question-section">Функционал</span><br>Укажите функционал должности</td>
+                    <td class="user-answer">• Руководить разработкой и внедрением AI-агентов для оптимизации бизнес-процессов
+• Управлять командой разработчиков, включая постановку задач и проведение code-review
+• Организовывать двухнедельные спринты и распределять задачи между членами команды
+• Контролировать полный цикл разработки AI-решений: проектирование, разработку, тестирование и деплоймент
+• Поддерживать экспертизу в областях машинного обучения, обработки естественного языка и архитектуры больших языковых моделей
+• Координация взаимодействия с Product Owner и другими техническими подразделениями
+• Представление результатов работы руководству компании раз в месяц
+• Повышать экономическую эффективность компании путем сокращения операционных затрат с помощью AI-технологий</td>
+                </tr>
+            
+                </tbody>
+            </table>
+            
+            <!-- Карточки для мобильных устройств -->
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">1</span>
+                        <span class="qa-card-question">Укажите точное название должности, которую мы оцениваем</span>
+                    </div>
+                    <div class="qa-card-section">Должность</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Правильное название должности — **руководитель направления**, хотя фактически соответствует уровню **Senior Developer**.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">2</span>
+                        <span class="qa-card-question">Сформулируйте главную цель этой роли. Какую основную ценность она создает для организации?</span>
+                    </div>
+                    <div class="qa-card-section">Цель роли</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Главная цель данной роли — разработка и внедрение AI-агентов для повышения операционной эффективности бизнеса и улучшения качества предоставляемых услуг.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">3</span>
+                        <span class="qa-card-question">Опишите полную иерархию структурных подразделений, к которым относится эта роль, начиная с высшего уровня. Требуется указать минимум два уровня. Перечисляйте подразделения через запятую, от высшего к низшему.
+
+Пример: Департамент информационных технологий, Управление разработки, Отдел бэкенд-разработки</span>
+                    </div>
+                    <div class="qa-card-section">Структура</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Дирекция по экосистеме юридических лиц, Корпоративное управление, Инструменты и данные</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">4</span>
+                        <span class="qa-card-question">Укажите точную должность вашего непосредственного руководителя. Название должно соответствовать организационной структуре компании</span>
+                    </div>
+                    <div class="qa-card-section">Должность руководителя</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Название должности моего непосредственного руководителя: **начальник отдела**.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">5</span>
+                        <span class="qa-card-question">Укажите минимальный уровень образования, необходимый для выполнения функциональных обязанностей на этой должности</span>
+                    </div>
+                    <div class="qa-card-section">Уровень образования</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Высшее образование - бакалавриат</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">6</span>
+                        <span class="qa-card-question">Требуется ли для данной должности дополнительное профильное образование? Если да, укажите, какие именно программы необходимы и их статус (обязательные или рекомендуемые)</span>
+                    </div>
+                    <div class="qa-card-section">Дополнительное образование</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Да, требуется. Обязательные: курсы по LangChain, LangGraph, OpenAI API и работе с LLM.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">7</span>
+                        <span class="qa-card-question">Какие специализированные знания и навыки необходимы для выполнения обязанностей на этой должности? Укажите:
+
+Языки (с уровнем владения, если требуется)
+Отраслевые знания (финансы, право, IT и др.)
+Технические навыки (ПО, инструменты)
+Другие критичные требования</span>
+                    </div>
+                    <div class="qa-card-section">Специализированные знания</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Специализированные знания и навыки:
+
+### Языки:
+- Python (Advanced)
+- Английский (Средний)
+
+### Отраслевые знания:
+- Машинное обучение (Machine Learning)
+- Обработка естественного языка (NLP)
+- Архитектура больших языковых моделей (LLM)
+- Prompt Engineering
+- Retrieval Augmented Generation (RAG)-системы
+
+### Технические навыки:
+- LangChain
+- LangGraph
+- OpenAI API
+- Векторные базы данных (Vector Databases)
+- Docker
+- Git
+- CI/CD
+
+### Другие критичные требования:
+- Управление командой разработчиков
+- Code Review
+- Планирование спринтов
+- Оценка задач</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">8</span>
+                        <span class="qa-card-question">Опишите уровень взаимодействия с людьми, требуемый для этой должности. Укажите, с какими именно группами людей происходит взаимодействие, какова цель этого взаимодействия, его регулярность и интенсивность</span>
+                    </div>
+                    <div class="qa-card-section">Взаимодействие и коммуникация</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Уровень взаимодействия высокий.  
+Ежедневно взаимодействует с командой разработчиков (5–7 человек): постановка задач, менторинг, code review.  
+Еженедельно встречается с Product Owner.  
+Регулярно координирует работу с другими командами (backend, frontend, DevOps).  
+Раз в месяц представляет результаты работы топ-менеджменту.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — 3. Убеждение</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">9</span>
+                        <span class="qa-card-question">Опишите уровень планирования и организации для этой роли: какие временные горизонты планирования охватывает работа, характер выполняемых задач, степень контроля над ресурсами и уровень самостоятельности в определении приоритетов и методов работы</span>
+                    </div>
+                    <div class="qa-card-section">Умение планировать, организовывать</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Уровень планирования и организации включает организацию двухнедельных спринтов, распределение задач среди команды разработчиков, контроль полного цикла разработки AI-агентов: от проектирования архитектуры до тестирования и деплоя. Самостоятельный выбор приоритетов и методов работы, высокая ответственность за ресурсы и результативность команды.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — II. Однородные</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">10</span>
+                        <span class="qa-card-question">Какой уровень экспертизы и глубины знаний требуется для этой должности?</span>
+                    </div>
+                    <div class="qa-card-section">Знания умения (необходимые умения)</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Требуется глубокая экспертиза в AI и LLM, опыт разработки от 5 лет (включая 2 года с AI-агентами), знание нейросетей, fine-tuning, RAG-архитектур и ML Ops, способность выбирать оптимальные технические решения и обучать команду.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 5 — E. Профессиональные</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">11</span>
+                        <span class="qa-card-question">Опишите степень свободы мышления, требуемую для решения задач на этой должности. Укажите, работа выполняется по строгим инструкциям, в рамках общих правил с выбором подходов или требует самостоятельного определения методов достижения целей</span>
+                    </div>
+                    <div class="qa-card-section">Область решаемых вопросов</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">4. Управление методами. Известно &quot;что&quot; делать, свобода в выборе &quot;как&quot;. Разработка процедур под задачи.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — D. Нормативная</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">12</span>
+                        <span class="qa-card-question">Опишите, насколько часто и в каких ситуациях от сотрудника требуются нестандартные подходы, создание новых методов работы или принципиально иных решений</span>
+                    </div>
+                    <div class="qa-card-section">Сложность решаемых вопросов</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Вариант 4</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — 4. Нестандартные вопросы</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">13</span>
+                        <span class="qa-card-question">Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+
+Например:
+Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</span>
+                    </div>
+                    <div class="qa-card-section">Тип влияния</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Да, разработанные AI-агенты позволили сэкономить компании около 100 млн рублей в год на операционных расходах.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — 3. Незначительная</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">14</span>
+                        <span class="qa-card-question">Опишите масштаб влияния этой должности в компании: какие области деятельности, процессы или результаты работы других сотрудников/подразделений зависят от решений и действий в этой роли, и как именно ваша работа влияет на смежные отделы или компанию в целом</span>
+                    </div>
+                    <div class="qa-card-section">Тип влияния</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Высокий уровень влияния: обеспечение полного цикла разработки и внедрения AI-агентов, прямое влияние на сокращение операционных расходов и получение измеримого экономического эффекта порядка 100 млн рублей ежегодно.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — 4. Прямое/Основное</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">16</span>
+                        <span class="qa-card-question">Опишите степень полномочий при принятии решений для этой должности: какие типы решений могут приниматься самостоятельно, какие требуют согласования, в рамках каких бюджетных или ресурсных ограничений происходит работа и как организован контроль за принимаемыми решениями</span>
+                    </div>
+                    <div class="qa-card-section">Свобода действий</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Степень самостоятельности высокая: 
+- Принятие решений по архитектуре, технологиям и формированию команды.
+- Внутри команды фиксированный объем ресурсов, отдельного бюджета нет.
+
+Контроль:
+- Осуществляется начальником отдела.
+- Форма контроля: еженедельное предоставление статуса работ.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — D. Регулируемая в целом</span>
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">17</span>
+                        <span class="qa-card-question">Опишите, как организован контроль конечных результатов для этой должности: с какой периодичностью оценивается результат работы, кто осуществляет контроль ?</span>
+                    </div>
+                    <div class="qa-card-section">Контроль конечных результатов</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Месяц - квартал</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">18</span>
+                        <span class="qa-card-question">Укажите функционал должности</span>
+                    </div>
+                    <div class="qa-card-section">Функционал</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">• Руководить разработкой и внедрением AI-агентов для оптимизации бизнес-процессов
+• Управлять командой разработчиков, включая постановку задач и проведение code-review
+• Организовывать двухнедельные спринты и распределять задачи между членами команды
+• Контролировать полный цикл разработки AI-решений: проектирование, разработку, тестирование и деплоймент
+• Поддерживать экспертизу в областях машинного обучения, обработки естественного языка и архитектуры больших языковых моделей
+• Координация взаимодействия с Product Owner и другими техническими подразделениями
+• Представление результатов работы руководству компании раз в месяц
+• Повышать экономическую эффективность компании путем сокращения операционных затрат с помощью AI-технологий</div>
+                        
+                    </div>
+                </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>Отчет сгенерирован автоматически • HAG MVP System • 17.10.2025 16:33</p>
+        </div>
+    </div>
+</body>
+</html>
+        
