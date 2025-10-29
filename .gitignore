@@ -18,6 +18,10 @@ __pycache__/
 *.tmp
 *.log
 
+# Сгенерированные отчеты
+exports/
+reports/
+
 # Windows
 Thumbs.db
 desktop.ini
