@@ -453,9 +453,11 @@ class TelegramBot:
         if state['remaining_questions']:
             next_question_id = state['remaining_questions'][0]
             
-            # Проверяем, нужна ли специальная логика для вопросов 1, 11, 12 или 18
+            # Проверяем, нужна ли специальная логика для вопросов 1, 3, 11, 12 или 18
             if next_question_id == 1:
                 await self.send_hierarchy_question(message, user_id, session_id)
+            elif next_question_id == 3:
+                await self.auto_fill_question_3(message, user_id, session_id)
             elif next_question_id == 11:
                 await self.send_adaptive_question_11(message, user_id, session_id)
             elif next_question_id == 12:
@@ -1012,6 +1014,85 @@ class TelegramBot:
         """Возвращает текущую дату и время в читаемом формате"""
         from datetime import datetime
         return datetime.now().strftime("%d.%m.%Y %H:%M")
+    
+    async def auto_fill_question_3(self, message: Message, user_id: int, session_id: int):
+        """Автоматическое заполнение вопроса 3 на основе пути из вопроса 1"""
+        try:
+            # Получаем ответ на вопрос 1
+            user_responses = self.db.get_user_responses(user_id, session_id, only_active=True)
+            q1_answer = None
+            
+            for response in user_responses:
+                if response['question'] == 1:
+                    q1_answer = response['answer']
+                    break
+            
+            if not q1_answer:
+                # Если нет ответа на вопрос 1, показываем стандартный вопрос 3
+                print("⚠️ Нет ответа на вопрос 1, используем стандартную логику для Q3")
+                await self.send_question(message, 3)
+                return
+            
+            # Получаем полный путь из иерархии по названию роли
+            # Ищем элемент с такой ролью
+            import sqlite3
+            with sqlite3.connect(self.db.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT full_path FROM shtat_hierarchy
+                    WHERE role = ?
+                    LIMIT 1
+                """, (q1_answer,))
+                result = cursor.fetchone()
+            
+            if not result or not result[0]:
+                # Если не нашли путь, используем сам ответ
+                hierarchy_path = q1_answer
+            else:
+                hierarchy_path = result[0]
+            
+            # Получаем данные вопроса 3 для отображения
+            question_data = self.db.get_question(3)
+            
+            # Сохраняем ответ БЕЗ проверки конфликтов (у вопроса 3 нет классификатора)
+            self.db.save_response(
+                user=user_id,
+                session_id=session_id,
+                question=3,
+                answer=hierarchy_path,
+                final_answer=hierarchy_path,
+                user_state=None,
+                check_conflicts=False
+            )
+            
+            # Генерируем/обновляем портрет пользователя
+            self.db.generate_user_portrait(user_id, session_id)
+            
+            # Убираем вопрос 3 из remaining_questions
+            state = self.active_sessions[user_id]['state']
+            if 3 in state['remaining_questions']:
+                state['remaining_questions'].remove(3)
+            
+            # Обновляем состояние
+            self.active_sessions[user_id]['state'] = state
+            self.db.save_user_state(user_id, session_id, state)
+            
+            # Показываем пользователю, что вопрос автоматически заполнен
+            info_text = f"📋 **Вопрос 3:** {question_data['question']}\n\n"
+            info_text += f"✅ **Автоматически заполнено на основе выбранной роли:**\n\n"
+            info_text += f"📍 {hierarchy_path}"
+            
+            await message.answer(info_text)
+            
+            # Переходим к следующему вопросу
+            await self.next_question(message, user_id, session_id)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в auto_fill_question_3: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback к стандартной логике
+            await self.send_question(message, 3)
     
     async def send_hierarchy_question(self, message: Message, user_id: int, session_id: int, parent_id: int = 0, current_path: str = ""):
         """Отправка вопроса 1 с выбором из иерархии штата"""
