@@ -35,6 +35,9 @@ class TelegramBot:
         
         # Регистрируем обработчик выбора LLM
         self.dp.callback_query.register(self.handle_llm_selection, F.data.startswith("llm_"))
+        
+        # Регистрируем обработчик выбора элемента иерархии штата (вопрос 1)
+        self.dp.callback_query.register(self.handle_hierarchy_selection, F.data.startswith("hier_"))
     
     async def start_command(self, message: Message):
         """Начать опрос"""
@@ -450,8 +453,10 @@ class TelegramBot:
         if state['remaining_questions']:
             next_question_id = state['remaining_questions'][0]
             
-            # Проверяем, нужна ли адаптивная логика для вопросов 11, 12 или 18
-            if next_question_id == 11:
+            # Проверяем, нужна ли специальная логика для вопросов 1, 11, 12 или 18
+            if next_question_id == 1:
+                await self.send_hierarchy_question(message, user_id, session_id)
+            elif next_question_id == 11:
                 await self.send_adaptive_question_11(message, user_id, session_id)
             elif next_question_id == 12:
                 await self.send_adaptive_question_12(message, user_id, session_id)
@@ -1007,6 +1012,208 @@ class TelegramBot:
         """Возвращает текущую дату и время в читаемом формате"""
         from datetime import datetime
         return datetime.now().strftime("%d.%m.%Y %H:%M")
+    
+    async def send_hierarchy_question(self, message: Message, user_id: int, session_id: int, parent_id: int = 0, current_path: str = ""):
+        """Отправка вопроса 1 с выбором из иерархии штата"""
+        try:
+            # Получаем дочерние элементы
+            children = self.db.get_hierarchy_children(parent_id)
+            
+            if not children:
+                # Если нет детей, что-то пошло не так
+                await message.answer("❌ Не найдены элементы иерархии. Используем стандартный вопрос.")
+                await self.send_question(message, 1)
+                return
+            
+            # Получаем данные вопроса
+            question_data = self.db.get_question(1)
+            
+            # Убираем старую reply клавиатуру
+            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            
+            # Формируем сообщение
+            if parent_id == 0:
+                # Корневой уровень - компании
+                text = f"📋 **{question_data['question']}**\n\n"
+                text += "Выберите компанию:"
+            else:
+                # Вложенный уровень
+                text = f"📋 **{question_data['question']}**\n\n"
+                text += f"📍 Текущий путь: {current_path}\n\n"
+                text += "Выберите элемент:"
+            
+            # Создаем inline клавиатуру
+            keyboard_buttons = []
+            for child in children:
+                keyboard_buttons.append([
+                    InlineKeyboardButton(
+                        text=child['role'],
+                        callback_data=f"hier_{child['id']}"
+                    )
+                ])
+            
+            # Добавляем кнопку "Назад" если не на корневом уровне
+            if parent_id != 0:
+                parent_item = self.db.get_hierarchy_item(parent_id)
+                if parent_item and parent_item['id_rod'] is not None:
+                    keyboard_buttons.append([
+                        InlineKeyboardButton(
+                            text="⬅️ Назад",
+                            callback_data=f"hier_back_{parent_item['id_rod']}"
+                        )
+                    ])
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            
+            # Сохраняем текущий путь в состоянии
+            state = self.active_sessions[user_id]['state']
+            state['hierarchy_current_path'] = current_path
+            state['hierarchy_parent_id'] = parent_id
+            self.active_sessions[user_id]['state'] = state
+            
+            # Отправляем сообщение
+            await message.answer(text, reply_markup=keyboard)
+            
+        except Exception as e:
+            print(f"❌ Ошибка в send_hierarchy_question: {e}")
+            # Fallback к стандартной логике
+            await self.send_question(message, 1)
+    
+    async def handle_hierarchy_selection(self, callback_query: CallbackQuery):
+        """Обработка выбора элемента из иерархии штата"""
+        user_id = callback_query.from_user.id
+        
+        if user_id not in self.active_sessions:
+            await callback_query.answer("❌ Сессия не найдена. Напишите /start")
+            return
+        
+        session_id = self.active_sessions[user_id]['session_id']
+        state = self.active_sessions[user_id]['state']
+        
+        try:
+            # Парсим callback_data: "hier_123" или "hier_back_0"
+            data = callback_query.data
+            
+            if data.startswith("hier_back_"):
+                # Возврат на предыдущий уровень
+                parent_id = int(data.split('_')[2])
+                
+                # Определяем путь для родителя
+                if parent_id == 0:
+                    new_path = ""
+                else:
+                    parent_item = self.db.get_hierarchy_item(parent_id)
+                    if parent_item:
+                        # Берем путь родителя из его full_path
+                        new_path = parent_item['full_path']
+                    else:
+                        new_path = ""
+                
+                # Убираем кнопки из текущего сообщения
+                try:
+                    await callback_query.message.delete()
+                except:
+                    pass
+                
+                await callback_query.answer("⬅️ Возврат назад")
+                
+                # Показываем предыдущий уровень
+                await self.send_hierarchy_question(
+                    callback_query.message, 
+                    user_id, 
+                    session_id, 
+                    parent_id=parent_id,
+                    current_path=new_path
+                )
+                
+            else:
+                # Выбор элемента: "hier_123"
+                selected_id = int(data.split('_')[1])
+                
+                # Получаем информацию об элементе
+                selected_item = self.db.get_hierarchy_item(selected_id)
+                
+                if not selected_item:
+                    await callback_query.answer("❌ Элемент не найден")
+                    return
+                
+                # Проверяем, является ли элемент конечным (листом)
+                is_leaf = self.db.is_hierarchy_leaf(selected_id)
+                
+                if is_leaf:
+                    # Это конечная роль - сохраняем как ответ на вопрос 1
+                    role_name = selected_item['role']
+                    full_path = selected_item['full_path']
+                    
+                    # Сохраняем ответ БЕЗ проверки конфликтов (у вопроса 1 нет классификатора)
+                    self.db.save_response(
+                        user=user_id,
+                        session_id=session_id,
+                        question=1,
+                        answer=role_name,
+                        final_answer=role_name,
+                        user_state=None,
+                        check_conflicts=False
+                    )
+                    
+                    # Генерируем/обновляем портрет пользователя
+                    self.db.generate_user_portrait(user_id, session_id)
+                    
+                    # Убираем вопрос 1 из remaining_questions
+                    if 1 in state['remaining_questions']:
+                        state['remaining_questions'].remove(1)
+                    
+                    # Очищаем данные иерархии из состояния
+                    state.pop('hierarchy_current_path', None)
+                    state.pop('hierarchy_parent_id', None)
+                    
+                    # Обновляем состояние
+                    self.active_sessions[user_id]['state'] = state
+                    self.db.save_user_state(user_id, session_id, state)
+                    
+                    # Убираем кнопки из сообщения
+                    try:
+                        await callback_query.message.delete()
+                    except:
+                        pass
+                    
+                    await callback_query.answer("✅ Роль выбрана!")
+                    
+                    # Показываем подтверждение
+                    confirmation_text = f"✅ **Выбрана роль:**\n\n"
+                    confirmation_text += f"📋 {role_name}\n\n"
+                    confirmation_text += f"📍 Путь: {full_path}"
+                    await callback_query.message.answer(confirmation_text)
+                    
+                    # Переходим к следующему вопросу
+                    await self.next_question(callback_query.message, user_id, session_id)
+                    
+                else:
+                    # Это не конечный элемент - показываем его детей
+                    new_path = selected_item['full_path']
+                    
+                    # Убираем кнопки из текущего сообщения
+                    try:
+                        await callback_query.message.delete()
+                    except:
+                        pass
+                    
+                    await callback_query.answer(f"➡️ {selected_item['role']}")
+                    
+                    # Показываем детей выбранного элемента
+                    await self.send_hierarchy_question(
+                        callback_query.message, 
+                        user_id, 
+                        session_id, 
+                        parent_id=selected_id,
+                        current_path=new_path
+                    )
+                    
+        except Exception as e:
+            print(f"❌ Ошибка в handle_hierarchy_selection: {e}")
+            import traceback
+            traceback.print_exc()
+            await callback_query.answer("❌ Произошла ошибка")
     
     async def setup_bot_commands(self):
         """Настройка меню команд бота"""

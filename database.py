@@ -551,6 +551,60 @@ class Database:
             """, (question_number, answer_number))
             result = cursor.fetchone()
             return result[0] if result else None
+    
+    def get_hierarchy_children(self, parent_id: int) -> List[Dict]:
+        """Получить дочерние элементы в иерархии штата"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, role, id_rod, full_path
+                FROM shtat_hierarchy
+                WHERE id_rod = ?
+                ORDER BY role
+            """, (parent_id,))
+            results = cursor.fetchall()
+            
+            children = []
+            for result in results:
+                children.append({
+                    'id': result[0],
+                    'role': result[1],
+                    'id_rod': result[2],
+                    'full_path': result[3]
+                })
+            return children
+    
+    def get_hierarchy_item(self, item_id: int) -> Optional[Dict]:
+        """Получить элемент иерархии по ID"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, role, id_rod, full_path
+                FROM shtat_hierarchy
+                WHERE id = ?
+            """, (item_id,))
+            result = cursor.fetchone()
+            
+            if result:
+                return {
+                    'id': result[0],
+                    'role': result[1],
+                    'id_rod': result[2],
+                    'full_path': result[3]
+                }
+            return None
+    
+    def is_hierarchy_leaf(self, item_id: int) -> bool:
+        """Проверить, является ли элемент конечным (листом) - т.е. не имеет детей"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM shtat_hierarchy 
+                WHERE id_rod = ?
+            """, (item_id,))
+            result = cursor.fetchone()
+            return result[0] == 0 if result else True
 
 
  
