@@ -1181,6 +1181,10 @@ class TelegramBot:
             if parent_id != 0:
                 temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
+            # Проверяем, являются ли дочерние элементы конечными (ролями)
+            # Если хотя бы один элемент - лист, значит это уровень ролей
+            is_roles_level = any(self.db.is_hierarchy_leaf(child['id']) for child in children)
+            
             # Формируем сообщение
             if parent_id == 0:
                 # Корневой уровень - компании
@@ -1190,7 +1194,10 @@ class TelegramBot:
                 # Вложенный уровень
                 text = f"📋 {question_data['question']}\n\n"
                 text += f"📍 Текущий путь: {current_path}\n\n"
-                text += "Выберите элемент:"
+                if is_roles_level:
+                    text += "Выберите роль:"
+                else:
+                    text += "Выберите подразделение:"
             
             # Создаем inline клавиатуру
             keyboard_buttons = []
