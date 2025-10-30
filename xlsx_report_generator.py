@@ -118,6 +118,7 @@ class XLSXReportGenerator:
             Dict с ключами: question_1, question_3, question_8_hay, question_9_hay и т.д.
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # Получаем ответы пользователя
@@ -158,6 +159,7 @@ class XLSXReportGenerator:
             
         try:
             with sqlite3.connect(self.db_path) as conn:
+                conn.text_factory = str
                 cursor = conn.cursor()
                 
                 # Преобразуем answer_number в число

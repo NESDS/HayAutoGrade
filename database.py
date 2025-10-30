@@ -11,6 +11,7 @@ class Database:
     def get_question(self, question_id: int) -> Optional[Dict]:
         """Получение вопроса по ID"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, question, answer_options, verification_instruction, 
@@ -34,6 +35,7 @@ class Database:
     def get_all_questions(self) -> List[Dict]:
         """Получение всех вопросов"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, question, answer_options, verification_instruction, 
@@ -58,6 +60,7 @@ class Database:
     def get_hay_definition(self, question_number: int, answer_number: int) -> Optional[str]:
         """Получение определения по Hay для конкретного ответа"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT hay_definition 
@@ -74,6 +77,7 @@ class Database:
         Если указан question_number, возвращает только для этого вопроса
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             if question_number is not None:
@@ -112,6 +116,7 @@ class Database:
         user_state_json = json.dumps(user_state, ensure_ascii=False) if user_state else None
         
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # Помечаем предыдущие ответы на этот вопрос как 'inactive'
@@ -145,6 +150,7 @@ class Database:
     def _mark_responses_as_conflicted(self, user: int, session_id: int, conflicts: List[Dict]) -> None:
         """Помечает ответы, участвующие в конфликтах, как 'inactive'"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             for conflict in conflicts:
@@ -197,6 +203,7 @@ class Database:
         only_active: если True, возвращает только активные ответы, если False - все ответы
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             if only_active:
@@ -230,6 +237,7 @@ class Database:
     def get_next_session_id(self, user: int) -> int:
         """Получение следующего номера сессии для пользователя"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT MAX(session_id)
@@ -246,6 +254,7 @@ class Database:
         state_json = json.dumps(state, ensure_ascii=False)
         
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             # Ищем последнюю запись этого пользователя в этой сессии
             cursor.execute("""
@@ -269,6 +278,7 @@ class Database:
     def get_user_state(self, user: int, session_id: int) -> Optional[Dict]:
         """Получение состояния пользователя из последней записи"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT user_state FROM responses 
@@ -288,6 +298,7 @@ class Database:
     def delete_user_state(self, user: int, session_id: int) -> None:
         """Удаление состояния пользователя"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE responses 
@@ -299,6 +310,7 @@ class Database:
     def get_all_question_ids(self) -> List[int]:
         """Получение списка всех ID вопросов из базы данных"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM questions ORDER BY id")
             results = cursor.fetchall()
@@ -360,6 +372,7 @@ class Database:
         Для Q12: использует p1_value + q11_answer
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             if question_num == 11:
@@ -418,6 +431,7 @@ class Database:
         Возвращает: {question_id: final_answer_as_int}
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # Формируем запрос с плейсхолдерами для IN clause
@@ -450,6 +464,7 @@ class Database:
         2. Добавить 8,9,10,11,12 в remaining_questions текущего состояния
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # 1. Деактивируем ответы на вопросы 8-12
@@ -481,6 +496,7 @@ class Database:
     def update_session_portrait(self, user_id: int, session_id: int, portrait: str) -> None:
         """Обновляет портрет пользователя в последней записи сессии"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE responses 
@@ -495,6 +511,7 @@ class Database:
     def get_session_portrait(self, user_id: int, session_id: int) -> Optional[str]:
         """Получает портрет пользователя для сессии"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT user_portrait FROM responses 
@@ -543,6 +560,7 @@ class Database:
     def get_hay_level_description(self, question_number: int, answer_number: int) -> Optional[str]:
         """Получает описание уровня HAY из справочника"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT hay_definition 
@@ -555,6 +573,7 @@ class Database:
     def get_hierarchy_children(self, parent_id: int) -> List[Dict]:
         """Получить дочерние элементы в иерархии штата"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, role, id_rod, full_path
@@ -577,6 +596,7 @@ class Database:
     def get_hierarchy_item(self, item_id: int) -> Optional[Dict]:
         """Получить элемент иерархии по ID"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, role, id_rod, full_path
@@ -597,6 +617,7 @@ class Database:
     def is_hierarchy_leaf(self, item_id: int) -> bool:
         """Проверить, является ли элемент конечным (листом) - т.е. не имеет детей"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT COUNT(*) 

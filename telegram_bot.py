@@ -1084,6 +1084,7 @@ class TelegramBot:
             # Ищем элемент с такой ролью
             import sqlite3
             with sqlite3.connect(self.db.db_path) as conn:
+                conn.text_factory = str
                 cursor = conn.cursor()
                 cursor.execute("""
                     SELECT full_path FROM shtat_hierarchy

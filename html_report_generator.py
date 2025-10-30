@@ -54,6 +54,7 @@ class HTMLReportGenerator:
     def _get_questions_and_answers(self, user_id: int, session_id: int) -> List[Dict]:
         """Получает детальную информацию о вопросах и ответах пользователя"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # Получаем ответы пользователя с текстами вопросов и разделами
@@ -112,6 +113,7 @@ class HTMLReportGenerator:
         try:
             # Получаем ответы пользователя для диагностики
             with sqlite3.connect(self.db_path) as conn:
+                conn.text_factory = str
                 cursor = conn.cursor()
                 cursor.execute("""
                     SELECT question, final_answer 

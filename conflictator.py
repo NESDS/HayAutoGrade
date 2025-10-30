@@ -53,6 +53,7 @@ class ConflictDetector:
     def _find_active_conflicts(self, response_map: Dict[int, int]) -> List[Dict]:
         """Находит все активные конфликты для данного набора ответов"""
         with sqlite3.connect(self.db.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             
             # Получаем все конфликты

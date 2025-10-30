@@ -84,6 +84,7 @@ class GradeCalculator:
     def _get_user_answers(self, user_id: int, session_id: int) -> Dict[int, int]:
         """Получить все ответы пользователя для сессии"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT question, final_answer 
@@ -116,6 +117,7 @@ class GradeCalculator:
         answer_q10 = user_answers[10]
         
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT p1_value FROM grading_p1 
@@ -135,6 +137,7 @@ class GradeCalculator:
         answer_q12 = user_answers[12]
         
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT p2_value FROM grading_p2 
@@ -147,6 +150,7 @@ class GradeCalculator:
     def _calculate_p3(self, p1: int, p2: int) -> Optional[int]:
         """Вычислить p3 по таблице поиска p3 (по уже вычисленным p1 и p2)"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT p3_value FROM grading_p3 
@@ -178,6 +182,7 @@ class GradeCalculator:
     def _calculate_p4_by_q14(self, answer_q16: int, answer_q13: int, answer_q14: int) -> Optional[int]:
         """Вычислить p4 по таблице p4-14"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT p4_value FROM grading_p4_14 
@@ -190,6 +195,7 @@ class GradeCalculator:
     def _calculate_p4_by_q15(self, answer_q16: int, answer_q13: int, answer_q15: int) -> Optional[int]:
         """Вычислить p4 по таблице p4-15"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT p4_value FROM grading_p4_15 
@@ -202,6 +208,7 @@ class GradeCalculator:
     def _determine_grade(self, total_p: int) -> Optional[Dict]:
         """Определить грейд по итоговому параметру p"""
         with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = str
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT low_bound, mid_point, high_bound, sber_grade 
