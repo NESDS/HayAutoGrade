@@ -582,7 +582,7 @@ class TelegramBot:
             self.active_sessions[user_id]['state'] = state
             
             # Убираем старую reply клавиатуру (если была)
-            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
             # Формируем сообщение и клавиатуру
             if len(variants) == 1:
@@ -591,6 +591,12 @@ class TelegramBot:
             else:
                 text = self._format_multiple_variants_message(question_data, p1_value, variants)
                 keyboard = self._create_multiple_variants_keyboard(variants, 11)
+            
+            # Удаляем временное сообщение с песочными часами
+            try:
+                await temp_msg.delete()
+            except:
+                pass
             
             await message.answer(text, reply_markup=keyboard)
             
@@ -922,7 +928,7 @@ class TelegramBot:
             self.active_sessions[user_id]['state'] = state
             
             # Убираем старую reply клавиатуру (если была)
-            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
             # Формируем сообщение и клавиатуру
             if len(variants) == 1:
@@ -931,6 +937,12 @@ class TelegramBot:
             else:
                 text = self._format_multiple_variants_message(question_data, p1_value, variants)
                 keyboard = self._create_multiple_variants_keyboard(variants, 12)
+            
+            # Удаляем временное сообщение с песочными часами
+            try:
+                await temp_msg.delete()
+            except:
+                pass
             
             await message.answer(text, reply_markup=keyboard)
             
@@ -974,7 +986,7 @@ class TelegramBot:
             question_data = self.db.get_question(18)
             
             # Сначала убираем старую клавиатуру от предыдущего вопроса
-            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
             # Формируем сообщение
             text = f"📋 **{question_data['question']}**\n\n"
@@ -987,6 +999,12 @@ class TelegramBot:
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="✅ Принять как есть", callback_data=f"func_accept_18")]
             ])
+            
+            # Удаляем временное сообщение с песочными часами
+            try:
+                await temp_msg.delete()
+            except:
+                pass
             
             # Отправляем сообщение с inline кнопкой
             await message.answer(text, reply_markup=keyboard)
@@ -1158,7 +1176,7 @@ class TelegramBot:
             question_data = self.db.get_question(1)
             
             # Убираем старую reply клавиатуру
-            await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
             # Формируем сообщение
             if parent_id == 0:
@@ -1199,6 +1217,12 @@ class TelegramBot:
             state['hierarchy_current_path'] = current_path
             state['hierarchy_parent_id'] = parent_id
             self.active_sessions[user_id]['state'] = state
+            
+            # Удаляем временное сообщение с песочными часами
+            try:
+                await temp_msg.delete()
+            except:
+                pass
             
             # Отправляем сообщение
             await message.answer(text, reply_markup=keyboard)
