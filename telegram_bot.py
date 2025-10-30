@@ -1163,11 +1163,11 @@ class TelegramBot:
             # Формируем сообщение
             if parent_id == 0:
                 # Корневой уровень - компании
-                text = f"📋 **{question_data['question']}**\n\n"
+                text = f"📋 {question_data['question']}\n\n"
                 text += "Выберите компанию:"
             else:
                 # Вложенный уровень
-                text = f"📋 **{question_data['question']}**\n\n"
+                text = f"📋 {question_data['question']}\n\n"
                 text += f"📍 Текущий путь: {current_path}\n\n"
                 text += "Выберите элемент:"
             
