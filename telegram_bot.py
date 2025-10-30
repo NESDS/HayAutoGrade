@@ -1175,8 +1175,11 @@ class TelegramBot:
             # Получаем данные вопроса
             question_data = self.db.get_question(1)
             
-            # Убираем старую reply клавиатуру
-            temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
+            # Убираем старую reply клавиатуру только если это не первый вопрос
+            # (на первом вопросе еще нет клавиатуры для удаления)
+            temp_msg = None
+            if parent_id != 0:
+                temp_msg = await message.answer("⏳", reply_markup=ReplyKeyboardRemove())
             
             # Формируем сообщение
             if parent_id == 0:
@@ -1218,11 +1221,12 @@ class TelegramBot:
             state['hierarchy_parent_id'] = parent_id
             self.active_sessions[user_id]['state'] = state
             
-            # Удаляем временное сообщение с песочными часами
-            try:
-                await temp_msg.delete()
-            except:
-                pass
+            # Удаляем временное сообщение с песочными часами (если оно было создано)
+            if temp_msg:
+                try:
+                    await temp_msg.delete()
+                except:
+                    pass
             
             # Отправляем сообщение
             await message.answer(text, reply_markup=keyboard)
