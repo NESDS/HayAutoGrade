@@ -103,7 +103,7 @@ class TelegramBot:
         
         # Показываем какой LLM используется
         service = LLMFactory.create_service(llm_type)
-        await message.answer(f"🚀 Начинаю опрос! (Сессия #{session_id})\n💡 Используется: {service.emoji} {service.name}")
+        await message.answer(f"🚀 Начинаю опрос!\n💡 Используется: {service.emoji} {service.name}")
         
         # Вводное пояснение для пользователя
         intro_text = """
@@ -246,16 +246,6 @@ class TelegramBot:
             # Сохраняем обновленное состояние
             self.db.save_user_state(user_id, session_id, state)
             
-            # Если есть классификатор, показываем уровень пользователю
-            if question_data.get('classifier'):
-                try:
-                    level_number = int(final_answer)
-                    hay_description = self.db.get_hay_level_description(current_question, level_number)
-                    if hay_description:
-                        await message.answer(f"📊 Определён уровень {level_number}: {hay_description}")
-                except (ValueError, TypeError):
-                    pass  # Если final_answer не число, пропускаем
-            
             await self.next_question(message, user_id, session_id)
         else:
             # Получаем портрет пользователя для контекста
@@ -298,18 +288,8 @@ class TelegramBot:
                 # Сохраняем обновленное состояние
                 self.db.save_user_state(user_id, session_id, state)
                 
-                # Формируем ответ с уровнем HAY если есть классификатор
+                # Формируем ответ
                 response_message = f"✅ Принято! {response_text}"
-                
-                # Если есть классификатор, показываем уровень
-                if question_data.get('classifier'):
-                    try:
-                        level_number = int(final_answer)
-                        hay_description = self.db.get_hay_level_description(current_question, level_number)
-                        if hay_description:
-                            response_message += f"\n\n📊 Определён уровень {level_number}: {hay_description}"
-                    except (ValueError, TypeError):
-                        pass  # Если final_answer не число, пропускаем
                 
                 await message.answer(response_message)
                 await self.next_question(message, user_id, session_id)
@@ -341,43 +321,11 @@ class TelegramBot:
         conflict_details += "Ваши ответы на следующие вопросы противоречат друг другу:\n\n"
         
         # Получаем детали для каждого вопроса в конфликте
-        user_responses = self.db.get_user_responses(user_id, session_id, only_active=True)
-        response_map = {r['question']: r for r in user_responses}
-        
         for i, q_info in enumerate(conflict['questions'], 1):
             question_id = q_info['question_id']
             question_text = q_info['question_text']
-            answer_text = q_info.get('answer_text', '')  # Общее описание уровня из конфликтов
             
-            # Получаем уровень из response_map
-            if question_id in response_map:
-                user_response = response_map[question_id]
-                level = user_response.get('final_answer', '')
-                
-                conflict_details += f"**{i}. Вопрос {question_id}:** {question_text}\n"
-                
-                # Показываем уровень и общее описание
-                if level and str(level).isdigit():
-                    level_num = int(level)
-                    conflict_details += f"   ├─ 🔢 Уровень {level_num}"
-                    
-                    # Добавляем общее описание из конфликтов
-                    if answer_text:
-                        conflict_details += f": _{answer_text[:100]}{'...' if len(answer_text) > 100 else ''}_\n"
-                    else:
-                        conflict_details += "\n"
-                    
-                    # Добавляем описание по HAY из справочника
-                    try:
-                        hay_desc = self.db.get_hay_level_description(question_id, level_num)
-                        if hay_desc:
-                            conflict_details += f"   └─ 📊 HAY: _{hay_desc[:100]}{'...' if len(hay_desc) > 100 else ''}_\n"
-                    except (ValueError, TypeError):
-                        pass
-                else:
-                    conflict_details += f"   └─ (уровень не определён)\n"
-                
-                conflict_details += "\n"
+            conflict_details += f"**{i}. Вопрос {question_id}:** {question_text}\n\n"
         
         await message.answer(conflict_details)
         
@@ -503,9 +451,7 @@ class TelegramBot:
             
             await message.answer_document(
                 document=document,
-                caption=f"📊 Ваш персональный HTML отчет\n"
-                       f"👤 Пользователь: #{user_id}\n"
-                       f"📋 Сессия: #{session_id}\n"
+                caption=f"📊 Ваш персональный отчет\n"
                        f"📅 Дата: {self._get_current_datetime()}"
             )
             
@@ -539,8 +485,6 @@ class TelegramBot:
             await message.answer_document(
                 document=document,
                 caption=f"📊 Ваш персональный калькулятор грейда\n"
-                       f"👤 Пользователь: #{user_id}\n"
-                       f"📋 Сессия: #{session_id}\n"
                        f"📅 Дата: {self._get_current_datetime()}\n\n"
                        f"✨ Файл содержит все ваши ответы с расчетом грейда"
             )
@@ -609,7 +553,7 @@ class TelegramBot:
         """Формат сообщения для единственного варианта"""
         return f"""Вопрос {question_data['id']}: {question_data['question']}
 
-🔍 Исходя из ваших предыдущих ответов (P1 = {p1_value}), возможен только следующий вариант:
+🔍 Исходя из ваших предыдущих ответов, возможен только следующий вариант:
 
 📋 {variant['variant_text']}
 
@@ -619,7 +563,7 @@ class TelegramBot:
         """Формат сообщения для множественных вариантов"""
         text = f"""Вопрос {question_data['id']}: {question_data['question']}
 
-🔍 Исходя из ваших предыдущих ответов (P1 = {p1_value}), возможны следующие варианты:
+🔍 Исходя из ваших предыдущих ответов, возможны следующие варианты:
 
 """
         # Добавляем все варианты в текст сообщения
@@ -1043,10 +987,6 @@ class TelegramBot:
                 else:
                     text += f"\n• Вопрос {q_num}: (нет ответа)"
                     answers_for_p1.append("не указан")
-            
-            # Добавляем техническую информацию о P1
-            if len(answers_for_p1) == 3:
-                text += f"\n\n⚠️ Комбинация Q8={answers_for_p1[0]}, Q9={answers_for_p1[1]}, Q10={answers_for_p1[2]} не найдена в справочнике P1."
             
             text += "\n\n🔄 Предлагаем пересдать вопросы 8-10 для корректного определения вариантов."
             
