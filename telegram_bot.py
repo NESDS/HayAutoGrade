@@ -35,6 +35,9 @@ class TelegramBot:
         
         # Регистрируем обработчик выбора LLM
         self.dp.callback_query.register(self.handle_llm_selection, F.data.startswith("llm_"))
+        
+        # Регистрируем обработчик кнопки "Начать интервью"
+        self.dp.callback_query.register(self.handle_start_interview, F.data == "start_interview")
     
     async def start_command(self, message: Message):
         """Начать опрос"""
@@ -56,7 +59,7 @@ class TelegramBot:
             [InlineKeyboardButton(text="🇺🇸 GPT-5", callback_data="llm_openai")]
         ])
         
-        await message.answer(text, reply_markup=keyboard)
+        await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     
     async def handle_llm_selection(self, callback_query: CallbackQuery):
         """Обработка выбора LLM"""
@@ -68,7 +71,7 @@ class TelegramBot:
         selected_text = f"✅ Выбран AI помощник: {service.emoji} **{service.name}**"
         
         try:
-            await callback_query.message.edit_text(text=selected_text, reply_markup=None)
+            await callback_query.message.edit_text(text=selected_text, reply_markup=None, parse_mode="Markdown")
         except Exception as e:
             print(f"⚠️ Не удалось отредактировать сообщение: {e}")
         
@@ -76,6 +79,27 @@ class TelegramBot:
         
         # Начинаем опрос с выбранным LLM
         await self.start_survey_with_llm(callback_query.message, user_id, llm_type)
+    
+    async def handle_start_interview(self, callback_query: CallbackQuery):
+        """Обработка нажатия кнопки 'Начать интервью'"""
+        user_id = callback_query.from_user.id
+        
+        if user_id not in self.active_sessions:
+            await callback_query.answer("❌ Сессия не найдена. Напишите /start")
+            return
+        
+        session_id = self.active_sessions[user_id]['session_id']
+        
+        # Убираем кнопку и обновляем сообщение
+        try:
+            await callback_query.message.edit_reply_markup(reply_markup=None)
+        except Exception as e:
+            print(f"⚠️ Не удалось убрать кнопку: {e}")
+        
+        await callback_query.answer("🚀 Начинаю интервью!")
+        
+        # Отправляем первый вопрос
+        await self.send_next_question(callback_query.message, user_id, session_id)
     
     async def start_survey_with_llm(self, message: Message, user_id: int, llm_type: str):
         """Начать опрос с выбранным LLM"""
@@ -100,17 +124,22 @@ class TelegramBot:
         
         # Показываем какой LLM используется
         service = LLMFactory.create_service(llm_type)
-        await message.answer(f"🚀 Начинаю опрос!\n💡 Используется: {service.emoji} {service.name}")
+        await message.answer(f"💡 Используется: {service.emoji} {service.name}")
         
-        # Вводное пояснение для пользователя
+        # Вводное пояснение для пользователя с кнопкой начала
         intro_text = """
 Добрый день! Этот опрос поможет оценить уровень позиции в вашей команде по международной методике HAY Group. 
+
 Отвечайте, пожалуйста, исходя из реальных требований и сложности роли, а не из качеств конкретного сотрудника
+
 В примерах к каждому вопросу приведены ориентиры для одной условной должности — «Менеджер по продажам». Используйте их как образец стиля ответа, а не как точный шаблон. Ваша задача — описать именно ту роль, которую вы оцениваете
 """
-        await message.answer(intro_text, parse_mode="HTML")
+        # Создаем inline кнопку для начала интервью
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Начать интервью", callback_data="start_interview")]
+        ])
         
-        await self.send_next_question(message, user_id, session_id)
+        await message.answer(intro_text, reply_markup=keyboard, parse_mode="HTML")
     
     def get_agents_for_user(self, user_id: int):
         """Получить агенты с правильным LLM для пользователя"""
@@ -299,7 +328,7 @@ class TelegramBot:
                 # Формируем ответ
                 response_message = f"✅ Принято! {response_text}"
                 
-                await message.answer(response_message)
+                await message.answer(response_message, parse_mode="Markdown")
                 await self.next_question(message, user_id, session_id)
             else:
                 # Добавляем вопрос бота в conversation и обновляем состояние
@@ -308,7 +337,7 @@ class TelegramBot:
                 # Обновляем состояние в памяти
                 self.active_sessions[user_id]['state'] = state
                 
-                await message.answer(f"❓ {response_text}")
+                await message.answer(f"❓ {response_text}", parse_mode="Markdown")
     
     async def handle_conflict(self, message: Message, user_id: int, session_id: int, 
                             conflict: Dict, state: Dict):
@@ -331,11 +360,10 @@ class TelegramBot:
         # Получаем детали для каждого вопроса в конфликте
         for i, q_info in enumerate(conflict['questions'], 1):
             question_id = q_info['question_id']
-            question_text = q_info['question_text']
             
-            conflict_details += f"**{i}. Вопрос {question_id}:** {question_text}\n\n"
+            conflict_details += f"**{i}. Вопрос {question_id}**\n\n"
         
-        await message.answer(conflict_details)
+        await message.answer(conflict_details, parse_mode="Markdown")
         
         # Выводим техническую информацию о конфликте БЕЗ LLM
         print("\n" + "="*70)
@@ -400,7 +428,7 @@ class TelegramBot:
         self.db.save_user_state(user_id, session_id, state)
         
         # Отправляем объяснение от LLM
-        await message.answer(f"🤖 {explanation}")
+        await message.answer(f"🤖 {explanation}", parse_mode="Markdown")
         await message.answer(f"🔄 Предлагаю ответить на эти вопросы заново...")
         
         # Продолжаем опрос с конфликтующих вопросов
@@ -767,7 +795,8 @@ class TelegramBot:
                 try:
                     await callback_query.message.edit_text(
                         text=f"✅ **Функционал принят:**\n\n{functionality}",
-                        reply_markup=None
+                        reply_markup=None,
+                        parse_mode="Markdown"
                     )
                 except Exception as e:
                     print(f"⚠️ Не удалось отредактировать сообщение: {e}")
@@ -802,7 +831,7 @@ class TelegramBot:
             self.active_sessions[user_id]['state'] = state
             
             # Подтверждаем получение дополнений
-            await message.answer(f"✅ **Функционал сохранен с вашими дополнениями:**\n\n{full_functionality}")
+            await message.answer(f"✅ **Функционал сохранен с вашими дополнениями:**\n\n{full_functionality}", parse_mode="Markdown")
             
             # Переходим к следующему вопросу
             await self.send_next_question(message, user_id, session_id)
