@@ -181,9 +181,9 @@ class ConflictDetector:
 ПРОТИВОРЕЧИВЫЕ ОТВЕТЫ:
 """
         
-        # Добавляем вопросы из конфликта
+        # Добавляем вопросы из конфликта (только номера вопросов)
         for i, question in enumerate(conflict['questions'], 1):
-            prompt += f"• Критерий {i}: {question['question_text']}\n"
+            prompt += f"• Вопрос {question['question_id']}\n"
             prompt += f"  Выбранный ответ: «{question['answer_text']}»\n\n"
         
         prompt += """ЗАДАЧА:

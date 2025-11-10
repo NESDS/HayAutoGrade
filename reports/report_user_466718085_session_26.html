@@ -206,6 +206,17 @@
             font-weight: 500;
         }
         
+        .question-section {
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
         .user-answer {
             color: #555;
             line-height: 1.6;
@@ -214,7 +225,15 @@
             padding-left: 15px;
         }
         
-
+        .answer-level-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
         
         .footer {
             background: #f5f5f5;
@@ -262,6 +281,17 @@
             line-height: 1.5;
         }
         
+        .qa-card-section {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
         .qa-card-body {
             padding: 20px;
         }
@@ -295,14 +325,15 @@
             border-left: 3px solid #4caf50;
         }
         
-        .answer-level {
-            text-align: center;
+        .answer-level-badge-mobile {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.85em;
             font-weight: 500;
-            color: #2e7d32;
-            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
-            padding: 8px;
-            border-radius: 6px;
-            width: 120px;
         }
 
         @media (max-width: 768px) {
@@ -412,35 +443,35 @@
     <div class="container">
         <div class="header">
             <h1>Отчет по опросу</h1>
-            <div class="subtitle">Пользователь #466718085 | Сессия #26 | 19.08.2025 18:09</div>
+            <div class="subtitle">Пользователь #466718085 | Сессия #26 | 06.11.2025 18:59</div>
         </div>
         
         <div class="grade-section">
             
             <div class="grade-title">Ваш результат</div>
-            <div class="grade-value">Grade 58</div>
-            <div class="grade-range">Диапазон: 54-62</div>
+            <div class="grade-value">13.0</div>
+            <div class="grade-range">Диапазон: 614-734</div>
             
             <div class="calculation-details">
                 <div class="calc-item">
                     <div class="calc-label">Параметр P1</div>
-                    <div class="calc-value">43</div>
+                    <div class="calc-value">304</div>
                 </div>
                 <div class="calc-item">
                     <div class="calc-label">Параметр P2</div>
-                    <div class="calc-value">12</div>
+                    <div class="calc-value">38</div>
                 </div>
                 <div class="calc-item">
                     <div class="calc-label">Параметр P3</div>
-                    <div class="calc-value">5</div>
+                    <div class="calc-value">115</div>
                 </div>
                 <div class="calc-item">
                     <div class="calc-label">Параметр P4</div>
-                    <div class="calc-value">14</div>
+                    <div class="calc-value">200</div>
                 </div>
                 <div class="calc-item">
                     <div class="calc-label">Итого P</div>
-                    <div class="calc-value">62</div>
+                    <div class="calc-value">619</div>
                 </div>
             </div>
             
@@ -455,102 +486,146 @@
                     <tr>
                         <th>№</th>
                         <th>Вопрос</th>
-                        <th>Ваш ответ</th>
-                        <th>Уровень</th>
+                        <th>Ответ</th>
                     </tr>
                 </thead>
                 <tbody>
                     
                 <tr>
                     <td class="question-id">#1</td>
-                    <td class="question-text">Как называется должность, которую оцениваем?</td>
-                    <td class="user-answer">Менеджер</td>
-                    <td class="answer-level">Менеджер</td>
+                    <td class="question-text"><span class="question-section">Должность</span><br>Укажите точное название должности, которую мы оцениваем</td>
+                    <td class="user-answer">Руководитель направления</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#2</td>
+                    <td class="question-text"><span class="question-section">Структура</span><br>Сколько уровней (CEO-1, CEO-2, CEO-3 и т.д.) отделяют сотрудника от генерального директора?</td>
+                    <td class="user-answer">CEO-5 и более</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#3</td>
+                    <td class="question-text"><span class="question-section">Цель роли</span><br>Сформулируйте главную цель этой роли. Какую основную ценность она создает для организации?</td>
+                    <td class="user-answer">Главная цель роли — разработка и внедрение AI-агентов для автоматизации бизнес-процессов, повышающих эффективность, снижающих издержки и улучшающих качество сервиса.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#4</td>
+                    <td class="question-text"><span class="question-section">Должность руководителя</span><br>Назовите должность непосредственного руководителя для оцениваемой роли
+Пример: начальник отдела продаж</td>
+                    <td class="user-answer">Руководитель проектов</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#5</td>
+                    <td class="question-text"><span class="question-section">Уровень образования</span><br>Какое минимальное образование необходимо для этой роли?
+Пример: среднее специальное или высшее неполное</td>
+                    <td class="user-answer">Высшее образование - специалитет, магистратура</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#6</td>
+                    <td class="question-text"><span class="question-section">Дополнительное образование</span><br>Нужно ли дополнительное профильное образование? Если да, укажите программы и статус (обязательные/рекомендуемые).
+
+На примере менеджера по продажам: курсы по технике продаж — рекомендуемые</td>
+                    <td class="user-answer">Обязательные: курсы по LangChain, LangGraph, OpenAI API и работе с LLM.</td>
+                </tr>
+            
+                <tr>
+                    <td class="question-id">#7</td>
+                    <td class="question-text"><span class="question-section">Специализированные знания</span><br>Какие знания и навыки требуются? Укажите важные языки (если нужны), профессиональные и технические умения, а также другие ключевые требования.
+
+На примере менеджера по продажам: свободное владение русским﻿ и английским (B2)﻿, базовые навыки работы с CRM</td>
+                    <td class="user-answer">**Итоговый ответ пользователя:**  
+Python (advanced), английский (средний); знания в Machine Learning, NLP, архитектуре LLM-систем, prompt engineering и RAG-системах; навыки работы с LangChain, LangGraph, OpenAI API, vector databases, Docker, Git, CI/CD; управление командой разработки, code review, планирование спринтов, оценка задач.</td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#8</td>
-                    <td class="question-text">Опишите уровень взаимодействия с людьми, требуемый для этой должности.</td>
-                    <td class="user-answer">Требуется базовый уровень общения: вежливое обслуживание клиентов, консультации, прием заявок, информирование и ответы на стандартные запросы.</td>
-                    <td class="answer-level">1</td>
+                    <td class="question-text"><span class="question-section">Взаимодействие и коммуникация</span><br>Опишите взаимодействие с людьми: с кем, цель, частота.
+
+На примере менеджера по продажам: общение с клиентами для заключения сделок, ежедневно</td>
+                    <td class="user-answer">**Итоговый ответ пользователя:**  
+Ежедневное взаимодействие с командой из 5–7 разработчиков (постановка задач, менторинг, код-ревью); еженедельные встречи с Product Owner; координация с backend, frontend и DevOps-командами; ежемесячные презентации результатов топ-менеджменту.<br><br><span class="answer-level-badge">Уровень: 3 — 3. Убеждение</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#9</td>
-                    <td class="question-text">Опишите, какой уровень планирования и организации соответствует вашей роли. Какие задачи вы выполняете или контролируете?</td>
-                    <td class="user-answer">Выполняю конкретные задачи по инструкции, без самостоятельного планирования и глубокого понимания бизнеса.</td>
-                    <td class="answer-level">1</td>
+                    <td class="question-text"><span class="question-section">Умение планировать, организовывать</span><br>Опишите уровень планирования: сроки, задачи, контроль, самостоятельность.
+
+На примере менеджера по продажам: планирует ежемесячные цели по продажам, самостоятельно выбирает методы работы</td>
+                    <td class="user-answer">**Итоговый ответ пользователя:**  
+Планирует двухнедельные спринты, распределяет задачи между разработчиками, контролирует разработку AI-агентов от идеи до продакшена (архитектура, качество кода, тестирование, деплой).<br><br><span class="answer-level-badge">Уровень: 3 — II. Однородные</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#10</td>
-                    <td class="question-text">Какой уровень экспертизы и глубины знаний требуется для этой должности?</td>
-                    <td class="user-answer">Требуется начальный уровень знаний, обучение проводится непосредственно на рабочем месте, работа основана на простых инструкциях и шаблонных операциях.</td>
-                    <td class="answer-level">1</td>
+                    <td class="question-text"><span class="question-section">Знания умения (необходимые умения)</span><br>Какой уровень знаний и опыта требуется?
+
+На примере менеджера по продажам: опыт продаж от 1 года, базовые навыки переговоров</td>
+                    <td class="user-answer">**Итоговый ответ пользователя:**  
+Опыт разработки 5+ лет (в том числе 2+ года с AI-агентами); глубокая экспертиза в AI и LLM; знание нейросетей, fine-tuning, RAG-архитектур и ML Ops; умение подбирать оптимальные решения и обучать команду.<br><br><span class="answer-level-badge">Уровень: 5 — E. Профессиональные</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#11</td>
-                    <td class="question-text">Какая степень свободы мышления требуется для решения задач на этой должности?</td>
-                    <td class="user-answer">2. Выбор из готовых вариантов. Специализированные инструкции с нормой результата. Несколько допустимых последовательностей действий.</td>
-                    <td class="answer-level">2</td>
+                    <td class="question-text"><span class="question-section">Область решаемых вопросов</span><br>Насколько свободно принимаются решения?
+
+На примере менеджера по продажам: самостоятельно выбирает способы привлечения клиентов и проводит переговоры</td>
+                    <td class="user-answer">4. Управление методами. Известно &quot;что&quot; делать, свобода в выборе &quot;как&quot;. Разработка процедур под задачи.<br><br><span class="answer-level-badge">Уровень: 4 — D. Нормативная</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#12</td>
-                    <td class="question-text">Какой уровень креативности и оригинальности мышления требуется для решения задач на этой должности?</td>
-                    <td class="user-answer">1. Стандартные задачи. Одинаковые вопросы с единственным правильным решением по инструкции.</td>
-                    <td class="answer-level">1</td>
+                    <td class="question-text"><span class="question-section">Сложность решаемых вопросов</span><br>Как часто требуются нестандартные решения?
+
+На примере менеджера по продажам: регулярно, для адаптации под клиента</td>
+                    <td class="user-answer">Вариант 4<br><br><span class="answer-level-badge">Уровень: 4 — 4. Нестандартные вопросы</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#13</td>
-                    <td class="question-text">Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+                    <td class="question-text"><span class="question-section">Тип влияния</span><br>Можно ли измерить результат работы в деньгах? Если да, укажите пример метрики.
 
-Например:
-Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</td>
-                    <td class="user-answer">Нельзя.</td>
-                    <td class="answer-level">1</td>
+На примере менеджера по продажам: план по продажам — 10 млн рублей в квартал</td>
+                    <td class="user-answer">Экономический эффект — сокращение операционных расходов компании на ~100 млн рублей в год за счет внедрения AI-агентов.<br><br><span class="answer-level-badge">Уровень: 3 — Незначительная</span></td>
                 </tr>
             
                 <tr>
-                    <td class="question-id">#15</td>
-                    <td class="question-text">Укажите степень влияния должности на определенные конечные результаты</td>
-                    <td class="user-answer">Оказание эпизодической поддержки коллегам путем предоставления разовых услуг и помощи в выполнении временных задач.</td>
-                    <td class="answer-level">1</td>
+                    <td class="question-id">#14</td>
+                    <td class="question-text"><span class="question-section">Тип влияния</span><br>Опишите масштаб влияния: на какие процессы или подразделения влияет роль?
+
+На примере менеджера по продажам: влияет на доходы отдела продаж и общий коммерческий результат</td>
+                    <td class="user-answer">Влияет на процессы разработки и внедрения AI-агентов, обеспечивая полный цикл их реализации и напрямую влияя на снижение операционных затрат и экономический результат компании.<br><br><span class="answer-level-badge">Уровень: 4 — P. Основное</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#16</td>
-                    <td class="question-text">Опишите, пожалуйста, степень ваших полномочий при принятии решений в должности, указав основные особенности контроля и уровень самостоятельности (например, постоянный контроль с подробными инструкциями, частичная самостоятельность с возможностью менять приоритеты, стратегический уровень ответственности и т.п.).</td>
-                    <td class="user-answer">Полномочия ограничены общими инструкциями и контролем результатов работы; возможна самостоятельная корректировка последовательности действий в рамках установленных процедур и правил.</td>
-                    <td class="answer-level">2</td>
+                    <td class="question-text"><span class="question-section">Свобода действий</span><br>Опишите степень полномочий при принятии решений.
+
+На примере менеджера по продажам: принимает решения о скидках в рамках утверждённой политики</td>
+                    <td class="user-answer">Принимает решения по архитектуре, выбору технологий и формированию команды в рамках высокой самостоятельности.<br><br><span class="answer-level-badge">Уровень: 5 — E. Управляемая в целом</span></td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#17</td>
-                    <td class="question-text">Укажите контроль конечных результатов</td>
-                    <td class="user-answer">Рабочий день</td>
-                    <td class="answer-level">Рабочий день</td>
+                    <td class="question-text"><span class="question-section">Контроль конечных результатов</span><br>Как организован контроль результатов работы? Кто и с какой частотой оценивает?
+
+На примере менеджера по продажам: контроль руководителем отдела еженедельно</td>
+                    <td class="user-answer">Месяц - квартал</td>
                 </tr>
             
                 <tr>
                     <td class="question-id">#18</td>
-                    <td class="question-text">Укажите функционал должности</td>
-                    <td class="user-answer">Функционал должности:
-
-- Телефонное и онлайн-консультирование клиентов по продуктам и услугам компании.
-- Поддержка деловой переписки (обработка входящих/исходящих писем, регистрация запросов).
-- Подготовка и согласование коммерческих предложений, договоров, презентаций.
-- Координация взаимодействия клиента с внутренними подразделениями.
-- Контроль выполнения клиентских запросов и полное сопровождение взаимодействия.</td>
-                    <td class="answer-level">Функционал должности:
-
-- Телефонное и онлайн-консультирование клиентов по продуктам и услугам компании.
-- Поддержка деловой переписки (обработка входящих/исходящих писем, регистрация запросов).
-- Подготовка и согласование коммерческих предложений, договоров, презентаций.
-- Координация взаимодействия клиента с внутренними подразделениями.
-- Контроль выполнения клиентских запросов и полное сопровождение взаимодействия.</td>
+                    <td class="question-text"><span class="question-section">Функционал</span><br>Укажите основные функции и задачи оцениваемой роли</td>
+                    <td class="user-answer">• Разрабатывать и внедрять AI-агентов для автоматизации бизнес-процессов компании, направленных на повышение эффективности и снижение издержек.  
+• Проектировать архитектуру решений на основе LLM, RAG и ML-технологий, обеспечивая масштабируемость и надежность систем.  
+• Руководить командой разработчиков: распределять задачи, проводить менторинг, код-ревью и оценку результатов.  
+• Планировать и контролировать выполнение двухнедельных спринтов, обеспечивая достижение целей по срокам и качеству.  
+• Координировать взаимодействие с Product Owner, backend, frontend и DevOps-командами для интеграции решений в общую инфраструктуру.  
+• Принимать технические решения по выбору технологий, инструментов и архитектурных подходов в рамках высокой самостоятельности.  
+• Анализировать эффективность внедренных AI-решений и готовить отчеты о достигнутом экономическом эффекте для топ-менеджмента.  
+• Обеспечивать соблюдение стандартов разработки, CI/CD-процессов и качества кода при переходе решений в продакшн.</td>
                 </tr>
             
                 </tbody>
@@ -561,154 +636,246 @@
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">1</span>
-                        <span class="qa-card-question">Как называется должность, которую оцениваем?</span>
+                        <span class="qa-card-question">Укажите точное название должности, которую мы оцениваем</span>
                     </div>
+                    <div class="qa-card-section">Должность</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Менеджер</div>
-                        <div class="qa-card-level">Уровень: Менеджер</div>
+                        <div class="qa-card-answer">Руководитель направления</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">2</span>
+                        <span class="qa-card-question">Сколько уровней (CEO-1, CEO-2, CEO-3 и т.д.) отделяют сотрудника от генерального директора?</span>
+                    </div>
+                    <div class="qa-card-section">Структура</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">CEO-5 и более</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">3</span>
+                        <span class="qa-card-question">Сформулируйте главную цель этой роли. Какую основную ценность она создает для организации?</span>
+                    </div>
+                    <div class="qa-card-section">Цель роли</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Главная цель роли — разработка и внедрение AI-агентов для автоматизации бизнес-процессов, повышающих эффективность, снижающих издержки и улучшающих качество сервиса.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">4</span>
+                        <span class="qa-card-question">Назовите должность непосредственного руководителя для оцениваемой роли
+Пример: начальник отдела продаж</span>
+                    </div>
+                    <div class="qa-card-section">Должность руководителя</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Руководитель проектов</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">5</span>
+                        <span class="qa-card-question">Какое минимальное образование необходимо для этой роли?
+Пример: среднее специальное или высшее неполное</span>
+                    </div>
+                    <div class="qa-card-section">Уровень образования</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Высшее образование - специалитет, магистратура</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">6</span>
+                        <span class="qa-card-question">Нужно ли дополнительное профильное образование? Если да, укажите программы и статус (обязательные/рекомендуемые).
+
+На примере менеджера по продажам: курсы по технике продаж — рекомендуемые</span>
+                    </div>
+                    <div class="qa-card-section">Дополнительное образование</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">Обязательные: курсы по LangChain, LangGraph, OpenAI API и работе с LLM.</div>
+                        
+                    </div>
+                </div>
+            
+                <div class="qa-card">
+                    <div class="qa-card-header">
+                        <span class="qa-card-number">7</span>
+                        <span class="qa-card-question">Какие знания и навыки требуются? Укажите важные языки (если нужны), профессиональные и технические умения, а также другие ключевые требования.
+
+На примере менеджера по продажам: свободное владение русским﻿ и английским (B2)﻿, базовые навыки работы с CRM</span>
+                    </div>
+                    <div class="qa-card-section">Специализированные знания</div>
+                    <div class="qa-card-body">
+                        <div class="qa-card-answer">**Итоговый ответ пользователя:**  
+Python (advanced), английский (средний); знания в Machine Learning, NLP, архитектуре LLM-систем, prompt engineering и RAG-системах; навыки работы с LangChain, LangGraph, OpenAI API, vector databases, Docker, Git, CI/CD; управление командой разработки, code review, планирование спринтов, оценка задач.</div>
+                        
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">8</span>
-                        <span class="qa-card-question">Опишите уровень взаимодействия с людьми, требуемый для этой должности.</span>
+                        <span class="qa-card-question">Опишите взаимодействие с людьми: с кем, цель, частота.
+
+На примере менеджера по продажам: общение с клиентами для заключения сделок, ежедневно</span>
                     </div>
+                    <div class="qa-card-section">Взаимодействие и коммуникация</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Требуется базовый уровень общения: вежливое обслуживание клиентов, консультации, прием заявок, информирование и ответы на стандартные запросы.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">**Итоговый ответ пользователя:**  
+Ежедневное взаимодействие с командой из 5–7 разработчиков (постановка задач, менторинг, код-ревью); еженедельные встречи с Product Owner; координация с backend, frontend и DevOps-командами; ежемесячные презентации результатов топ-менеджменту.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — 3. Убеждение</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">9</span>
-                        <span class="qa-card-question">Опишите, какой уровень планирования и организации соответствует вашей роли. Какие задачи вы выполняете или контролируете?</span>
+                        <span class="qa-card-question">Опишите уровень планирования: сроки, задачи, контроль, самостоятельность.
+
+На примере менеджера по продажам: планирует ежемесячные цели по продажам, самостоятельно выбирает методы работы</span>
                     </div>
+                    <div class="qa-card-section">Умение планировать, организовывать</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Выполняю конкретные задачи по инструкции, без самостоятельного планирования и глубокого понимания бизнеса.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">**Итоговый ответ пользователя:**  
+Планирует двухнедельные спринты, распределяет задачи между разработчиками, контролирует разработку AI-агентов от идеи до продакшена (архитектура, качество кода, тестирование, деплой).</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — II. Однородные</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">10</span>
-                        <span class="qa-card-question">Какой уровень экспертизы и глубины знаний требуется для этой должности?</span>
+                        <span class="qa-card-question">Какой уровень знаний и опыта требуется?
+
+На примере менеджера по продажам: опыт продаж от 1 года, базовые навыки переговоров</span>
                     </div>
+                    <div class="qa-card-section">Знания умения (необходимые умения)</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Требуется начальный уровень знаний, обучение проводится непосредственно на рабочем месте, работа основана на простых инструкциях и шаблонных операциях.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">**Итоговый ответ пользователя:**  
+Опыт разработки 5+ лет (в том числе 2+ года с AI-агентами); глубокая экспертиза в AI и LLM; знание нейросетей, fine-tuning, RAG-архитектур и ML Ops; умение подбирать оптимальные решения и обучать команду.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 5 — E. Профессиональные</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">11</span>
-                        <span class="qa-card-question">Какая степень свободы мышления требуется для решения задач на этой должности?</span>
+                        <span class="qa-card-question">Насколько свободно принимаются решения?
+
+На примере менеджера по продажам: самостоятельно выбирает способы привлечения клиентов и проводит переговоры</span>
                     </div>
+                    <div class="qa-card-section">Область решаемых вопросов</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">2. Выбор из готовых вариантов. Специализированные инструкции с нормой результата. Несколько допустимых последовательностей действий.</div>
-                        <div class="qa-card-level">Уровень: 2</div>
+                        <div class="qa-card-answer">4. Управление методами. Известно &quot;что&quot; делать, свобода в выборе &quot;как&quot;. Разработка процедур под задачи.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — D. Нормативная</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">12</span>
-                        <span class="qa-card-question">Какой уровень креативности и оригинальности мышления требуется для решения задач на этой должности?</span>
+                        <span class="qa-card-question">Как часто требуются нестандартные решения?
+
+На примере менеджера по продажам: регулярно, для адаптации под клиента</span>
                     </div>
+                    <div class="qa-card-section">Сложность решаемых вопросов</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">1. Стандартные задачи. Одинаковые вопросы с единственным правильным решением по инструкции.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">Вариант 4</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — 4. Нестандартные вопросы</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">13</span>
-                        <span class="qa-card-question">Можно ли оценить результат вашей деятельности в денежном выражении за год (например, через план или фактическую выручку)? Если да — приведите пример метрики и её ориентиры на год.&quot;?
+                        <span class="qa-card-question">Можно ли измерить результат работы в деньгах? Если да, укажите пример метрики.
 
-Например:
-Директор маркетинга - величина воздействия в год по торговой выручке 35 млн в год</span>
+На примере менеджера по продажам: план по продажам — 10 млн рублей в квартал</span>
                     </div>
+                    <div class="qa-card-section">Тип влияния</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Нельзя.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">Экономический эффект — сокращение операционных расходов компании на ~100 млн рублей в год за счет внедрения AI-агентов.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 3 — Незначительная</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
-                        <span class="qa-card-number">15</span>
-                        <span class="qa-card-question">Укажите степень влияния должности на определенные конечные результаты</span>
+                        <span class="qa-card-number">14</span>
+                        <span class="qa-card-question">Опишите масштаб влияния: на какие процессы или подразделения влияет роль?
+
+На примере менеджера по продажам: влияет на доходы отдела продаж и общий коммерческий результат</span>
                     </div>
+                    <div class="qa-card-section">Тип влияния</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Оказание эпизодической поддержки коллегам путем предоставления разовых услуг и помощи в выполнении временных задач.</div>
-                        <div class="qa-card-level">Уровень: 1</div>
+                        <div class="qa-card-answer">Влияет на процессы разработки и внедрения AI-агентов, обеспечивая полный цикл их реализации и напрямую влияя на снижение операционных затрат и экономический результат компании.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 4 — P. Основное</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">16</span>
-                        <span class="qa-card-question">Опишите, пожалуйста, степень ваших полномочий при принятии решений в должности, указав основные особенности контроля и уровень самостоятельности (например, постоянный контроль с подробными инструкциями, частичная самостоятельность с возможностью менять приоритеты, стратегический уровень ответственности и т.п.).</span>
+                        <span class="qa-card-question">Опишите степень полномочий при принятии решений.
+
+На примере менеджера по продажам: принимает решения о скидках в рамках утверждённой политики</span>
                     </div>
+                    <div class="qa-card-section">Свобода действий</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Полномочия ограничены общими инструкциями и контролем результатов работы; возможна самостоятельная корректировка последовательности действий в рамках установленных процедур и правил.</div>
-                        <div class="qa-card-level">Уровень: 2</div>
+                        <div class="qa-card-answer">Принимает решения по архитектуре, выбору технологий и формированию команды в рамках высокой самостоятельности.</div>
+                        <span class="answer-level-badge-mobile">Уровень: 5 — E. Управляемая в целом</span>
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">17</span>
-                        <span class="qa-card-question">Укажите контроль конечных результатов</span>
+                        <span class="qa-card-question">Как организован контроль результатов работы? Кто и с какой частотой оценивает?
+
+На примере менеджера по продажам: контроль руководителем отдела еженедельно</span>
                     </div>
+                    <div class="qa-card-section">Контроль конечных результатов</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Рабочий день</div>
-                        <div class="qa-card-level">Уровень: Рабочий день</div>
+                        <div class="qa-card-answer">Месяц - квартал</div>
+                        
                     </div>
                 </div>
             
                 <div class="qa-card">
                     <div class="qa-card-header">
                         <span class="qa-card-number">18</span>
-                        <span class="qa-card-question">Укажите функционал должности</span>
+                        <span class="qa-card-question">Укажите основные функции и задачи оцениваемой роли</span>
                     </div>
+                    <div class="qa-card-section">Функционал</div>
                     <div class="qa-card-body">
-                        <div class="qa-card-answer-label">Ваш ответ:</div>
-                        <div class="qa-card-answer">Функционал должности:
-
-- Телефонное и онлайн-консультирование клиентов по продуктам и услугам компании.
-- Поддержка деловой переписки (обработка входящих/исходящих писем, регистрация запросов).
-- Подготовка и согласование коммерческих предложений, договоров, презентаций.
-- Координация взаимодействия клиента с внутренними подразделениями.
-- Контроль выполнения клиентских запросов и полное сопровождение взаимодействия.</div>
-                        <div class="qa-card-level">Уровень: Функционал должности:
-
-- Телефонное и онлайн-консультирование клиентов по продуктам и услугам компании.
-- Поддержка деловой переписки (обработка входящих/исходящих писем, регистрация запросов).
-- Подготовка и согласование коммерческих предложений, договоров, презентаций.
-- Координация взаимодействия клиента с внутренними подразделениями.
-- Контроль выполнения клиентских запросов и полное сопровождение взаимодействия.</div>
+                        <div class="qa-card-answer">• Разрабатывать и внедрять AI-агентов для автоматизации бизнес-процессов компании, направленных на повышение эффективности и снижение издержек.  
+• Проектировать архитектуру решений на основе LLM, RAG и ML-технологий, обеспечивая масштабируемость и надежность систем.  
+• Руководить командой разработчиков: распределять задачи, проводить менторинг, код-ревью и оценку результатов.  
+• Планировать и контролировать выполнение двухнедельных спринтов, обеспечивая достижение целей по срокам и качеству.  
+• Координировать взаимодействие с Product Owner, backend, frontend и DevOps-командами для интеграции решений в общую инфраструктуру.  
+• Принимать технические решения по выбору технологий, инструментов и архитектурных подходов в рамках высокой самостоятельности.  
+• Анализировать эффективность внедренных AI-решений и готовить отчеты о достигнутом экономическом эффекте для топ-менеджмента.  
+• Обеспечивать соблюдение стандартов разработки, CI/CD-процессов и качества кода при переходе решений в продакшн.</div>
+                        
                     </div>
                 </div>
             
         </div>
         
         <div class="footer">
-            <p>Отчет сгенерирован автоматически • HAG MVP System • 19.08.2025 18:09</p>
+            <p>Отчет сгенерирован автоматически • HAG MVP System • 06.11.2025 18:59</p>
         </div>
     </div>
 </body>

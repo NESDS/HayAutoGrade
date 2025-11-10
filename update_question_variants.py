@@ -33,10 +33,9 @@ def update_question_variants():
             print(f"📊 Найдено строк в листе q11-12: {len(df)}")
             print(f"📊 Колонки: {list(df.columns)}")
             
-            # Удаляем старые таблицы
-            cursor.execute("DROP TABLE IF EXISTS question_variants_q11")
-            cursor.execute("DROP TABLE IF EXISTS question_variants_q12")
-            print("🗑️ Удалили старые таблицы question_variants_q11 и question_variants_q12")
+            # Удаляем старую таблицу
+            cursor.execute("DROP TABLE IF EXISTS question_variants_q11_q12")
+            print("🗑️ Удалили старую таблицу question_variants_q11_q12")
             
             # Создаем новую объединенную таблицу question_variants_q11_q12
             cursor.execute("""
