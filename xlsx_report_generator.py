@@ -143,7 +143,7 @@ class XLSXReportGenerator:
                     data[f'question_{question_id}'] = answer
                 
                 # Для вопросов с HAY получаем расшифровку
-                if question_id in [8, 9, 10, 11, 12, 13, 14, 16]:
+                if question_id in [8, 9, 10, 11, 12, 13, 14, 15, 16]:
                     hay_definition = self._get_hay_definition(question_id, final_answer)
                     data[f'question_{question_id}_hay'] = hay_definition or final_answer or ""
             
@@ -229,10 +229,13 @@ class XLSXReportGenerator:
                 worksheet.Range("P19").Value = user_data['question_13_hay']
                 print(f"   P19 (HAY Q13): {user_data['question_13_hay'][:50]}...")
             
-            # Q19 - ответ по HAY на вопрос 14
+            # Q19 - ответ по HAY на вопрос 14 ИЛИ 15 (взаимоисключающие)
             if 'question_14_hay' in user_data:
                 worksheet.Range("Q19").Value = user_data['question_14_hay']
                 print(f"   Q19 (HAY Q14): {user_data['question_14_hay'][:50]}...")
+            elif 'question_15_hay' in user_data:
+                worksheet.Range("Q19").Value = user_data['question_15_hay']
+                print(f"   Q19 (HAY Q15): {user_data['question_15_hay'][:50]}...")
             
             print(f"[SUCCESS] Заполнение завершено")
             
