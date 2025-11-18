@@ -470,10 +470,8 @@ class TelegramBot:
             await self.generate_and_send_report(message, user_id, session_id)
     
     async def generate_and_send_report(self, message: Message, user_id: int, session_id: int):
-        """Генерирует HTML и XLSX отчеты и отправляет пользователю"""
+        """Генерирует HTML и XLSX отчеты и отправляет их администраторам"""
         try:
-            await message.answer("🎉 Опрос завершен! Генерирую ваши отчеты...", reply_markup=ReplyKeyboardRemove())
-            
             # Генерируем HTML отчет
             report_path = self.report_generator.save_report_to_file(
                 user_id=user_id, 
@@ -481,57 +479,51 @@ class TelegramBot:
                 output_path=f"reports/report_user_{user_id}_session_{session_id}.html"
             )
             
-            # Отправляем HTML файл пользователю
+            # Генерируем XLSX отчет
+            from xlsx_report_generator import XLSXReportGenerator
+            xlsx_generator = XLSXReportGenerator()
+            xlsx_report_path = xlsx_generator.generate_report(user_id, session_id)
+            
+            # Отправляем отчеты администраторам
+            admin_chat_ids = [953006638, 8258338606]
+            
             from aiogram.types import FSInputFile
-            document = FSInputFile(report_path)
             
-            await message.answer_document(
-                document=document,
-                caption=f"📊 Ваш персональный отчет\n"
-                       f"📅 Дата: {self._get_current_datetime()}"
-            )
+            for admin_chat_id in admin_chat_ids:
+                try:
+                    # Отправляем HTML отчет
+                    html_document = FSInputFile(report_path)
+                    await self.bot.send_document(
+                        chat_id=admin_chat_id,
+                        document=html_document,
+                        caption=f"📊 HTML отчет для пользователя {user_id}\n"
+                               f"📅 Дата: {self._get_current_datetime()}\n"
+                               f"🔢 Сессия: {session_id}"
+                    )
+                    
+                    # Отправляем XLSX отчет
+                    xlsx_document = FSInputFile(xlsx_report_path)
+                    await self.bot.send_document(
+                        chat_id=admin_chat_id,
+                        document=xlsx_document,
+                        caption=f"📊 Excel отчет для пользователя {user_id}\n"
+                               f"📅 Дата: {self._get_current_datetime()}\n"
+                               f"🔢 Сессия: {session_id}"
+                    )
+                    
+                    print(f"✅ Отчеты отправлены администратору {admin_chat_id}")
+                    
+                except Exception as e:
+                    print(f"❌ Ошибка отправки отчета администратору {admin_chat_id}: {e}")
             
-            # Генерируем и отправляем XLSX отчет (калькулятор)
-            await self.generate_and_send_xlsx_report(message, user_id, session_id)
-            
-            await message.answer("✅ Все отчеты готовы! Спасибо за участие в опросе.")
+            # Отправляем пользователю только сообщение о завершении
+            await message.answer("🎉 Интервьюирование завершено. Спасибо!", reply_markup=ReplyKeyboardRemove())
             
         except Exception as e:
             print(f"Ошибка при генерации отчета: {e}")
             import traceback
             traceback.print_exc()
             await message.answer("❌ Произошла ошибка при генерации отчета. Обратитесь к администратору.")
-    
-    async def generate_and_send_xlsx_report(self, message: Message, user_id: int, session_id: int):
-        """Генерирует XLSX отчет (калькулятор) и отправляет пользователю"""
-        try:
-            await message.answer("📊 Генерирую Excel калькулятор...")
-            
-            # Импортируем генератор
-            from xlsx_report_generator import XLSXReportGenerator
-            
-            # Генерируем отчет
-            xlsx_generator = XLSXReportGenerator()
-            report_path = xlsx_generator.generate_report(user_id, session_id)
-            
-            # Отправляем файл пользователю
-            from aiogram.types import FSInputFile
-            document = FSInputFile(report_path)
-            
-            await message.answer_document(
-                document=document,
-                caption=f"📊 Ваш персональный калькулятор грейда\n"
-                       f"📅 Дата: {self._get_current_datetime()}\n\n"
-                       f"✨ Файл содержит все ваши ответы с расчетом грейда"
-            )
-            
-            print(f"✅ XLSX отчет отправлен пользователю {user_id}")
-            
-        except Exception as e:
-            print(f"❌ Ошибка при генерации XLSX отчета: {e}")
-            import traceback
-            traceback.print_exc()
-            await message.answer("⚠️ Не удалось сгенерировать Excel калькулятор. HTML отчет доступен выше.")
     
     async def send_adaptive_question_11(self, message: Message, user_id: int, session_id: int):
         """Отправка вопроса 11 с адаптивными вариантами на основе P1"""
