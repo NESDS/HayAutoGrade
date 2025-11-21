@@ -50,12 +50,12 @@ class TelegramBot:
         """Показать выбор LLM пользователю"""
         text = """🤖 Выберите AI помощника для обработки ваших ответов:
 
-🇷🇺 **GigaChat** - российская разработка Сбера
 🇺🇸 **GPT-5** - OpenAI GPT-5 Chat Latest"""
+# 🇷🇺 **GigaChat** - российская разработка Сбера
         
         # Создаем кнопки выбора
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🇷🇺 GigaChat", callback_data="llm_gigachat")],
+            # [InlineKeyboardButton(text="🇷🇺 GigaChat", callback_data="llm_gigachat")],
             [InlineKeyboardButton(text="🇺🇸 GPT-5", callback_data="llm_openai")]
         ])
         
@@ -485,7 +485,7 @@ class TelegramBot:
             xlsx_report_path = xlsx_generator.generate_report(user_id, session_id)
             
             # Отправляем отчеты администраторам
-            admin_chat_ids = [953006638, 8258338606]
+            admin_chat_ids = [953006638, 8258338606, 1654434437]
             
             from aiogram.types import FSInputFile
             
