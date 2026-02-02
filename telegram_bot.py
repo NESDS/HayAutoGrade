@@ -432,7 +432,7 @@ class TelegramBot:
             await self.generate_and_send_report(message, user_id, session_id)
     
     async def generate_and_send_report(self, message: Message, user_id: int, session_id: int):
-        """Генерирует HTML и XLSX отчеты и отправляет их администраторам"""
+        """Генерирует HTML и XLSX отчеты и отправляет их пользователю"""
         try:
             # Генерируем HTML отчет
             report_path = self.report_generator.save_report_to_file(
@@ -446,39 +446,32 @@ class TelegramBot:
             xlsx_generator = XLSXReportGenerator()
             xlsx_report_path = xlsx_generator.generate_report(user_id, session_id)
             
-            # Отправляем отчеты администраторам
-            admin_chat_ids = [953006638, 8258338606, 1654434437]
-            
+            # Отправляем отчеты тому, кто проходил опрос (в текущий чат)
             from aiogram.types import FSInputFile
             
-            for admin_chat_id in admin_chat_ids:
-                try:
-                    # Отправляем HTML отчет
-                    html_document = FSInputFile(report_path)
-                    await self.bot.send_document(
-                        chat_id=admin_chat_id,
-                        document=html_document,
-                        caption=f"📊 HTML отчет для пользователя {user_id}\n"
-                               f"📅 Дата: {self._get_current_datetime()}\n"
-                               f"🔢 Сессия: {session_id}"
-                    )
-                    
-                    # Отправляем XLSX отчет
-                    xlsx_document = FSInputFile(xlsx_report_path)
-                    await self.bot.send_document(
-                        chat_id=admin_chat_id,
-                        document=xlsx_document,
-                        caption=f"📊 Excel отчет для пользователя {user_id}\n"
-                               f"📅 Дата: {self._get_current_datetime()}\n"
-                               f"🔢 Сессия: {session_id}"
-                    )
-                    
-                    print(f"✅ Отчеты отправлены администратору {admin_chat_id}")
-                    
-                except Exception as e:
-                    print(f"❌ Ошибка отправки отчета администратору {admin_chat_id}: {e}")
+            recipient_chat_id = message.chat.id
             
-            # Отправляем пользователю только сообщение о завершении
+            # HTML
+            html_document = FSInputFile(report_path)
+            await self.bot.send_document(
+                chat_id=recipient_chat_id,
+                document=html_document,
+                caption=f"📊 HTML отчет\n"
+                        f"📅 Дата: {self._get_current_datetime()}\n"
+                        f"🔢 Сессия: {session_id}"
+            )
+            
+            # XLSX
+            xlsx_document = FSInputFile(xlsx_report_path)
+            await self.bot.send_document(
+                chat_id=recipient_chat_id,
+                document=xlsx_document,
+                caption=f"📊 Excel отчет\n"
+                        f"📅 Дата: {self._get_current_datetime()}\n"
+                        f"🔢 Сессия: {session_id}"
+            )
+            
+            print(f"✅ Отчеты отправлены пользователю в чат {recipient_chat_id}")
             await message.answer("🎉 Интервьюирование завершено. Спасибо!", reply_markup=ReplyKeyboardRemove())
             
         except Exception as e:
