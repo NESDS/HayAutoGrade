@@ -17,3 +17,8 @@ python-dotenv>=1.0.0
 
 # COM интерфейс для работы с Excel (Windows)
 pywin32>=306
+
+# СберЧат (корпоративный SDK)
+# Пакет устанавливается из внутреннего PyPI/репозитория
+# Импорт в коде: dialog_bot_sdk
+# sber-sberchat-bot-sdk

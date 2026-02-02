@@ -7,6 +7,12 @@ load_dotenv()
 # Telegram Bot
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
+# СберЧат конфигурация (Dialog Bot SDK)
+SBERCHAT_TOKEN = os.getenv("SBERCHAT_TOKEN")
+SBERCHAT_ENDPOINT = os.getenv("SBERCHAT_ENDPOINT", "epbotsift.sberchat.sberbank.ru")
+SBERCHAT_IS_SECURE = os.getenv("SBERCHAT_IS_SECURE", "True").lower() in ("true", "1", "yes")
+SBERCHAT_ROOT_CERT = os.getenv("SBERCHAT_ROOT_CERT", "")
+
 # GigaChat конфигурация
 GIGACHAT_AUTH = os.getenv("GIGACHAT_AUTH")
 GIGACHAT_SCOPE = os.getenv("GIGACHAT_SCOPE", "GIGACHAT_API_CORP")
