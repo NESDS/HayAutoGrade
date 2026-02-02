@@ -14,20 +14,8 @@ GIGACHAT_API_URL = os.getenv("GIGACHAT_API_URL", "https://gigachat.devices.sberb
 GIGACHAT_TOKEN_URL = os.getenv("GIGACHAT_TOKEN_URL", "https://ngw.devices.sberbank.ru:9443/api/v2/oauth")
 GIGACHAT_MODEL = os.getenv("GIGACHAT_MODEL", "GigaChat-2-Max")
 
-# OpenAI конфигурация
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5-chat-latest")
-OPENAI_API_URL = os.getenv("OPENAI_API_URL", "https://api.openai.com/v1/chat/completions")
-
-# Прокси для OpenAI (опционально)
-OPENAI_USE_PROXY = os.getenv("OPENAI_USE_PROXY", "True").lower() in ("true", "1", "yes")
-OPENAI_PROXY_HOST = os.getenv("OPENAI_PROXY_HOST")
-OPENAI_PROXY_PORT = os.getenv("OPENAI_PROXY_PORT")
-OPENAI_PROXY_USER = os.getenv("OPENAI_PROXY_USER")
-OPENAI_PROXY_PASSWORD = os.getenv("OPENAI_PROXY_PASSWORD")
-
 # Настройки для разных типов задач LLM
-# Обе модели (GigaChat и OpenAI) используют одинаковые настройки для каждой задачи
+# Используются для GigaChat и внутренних агентов обработки
 
 LLM_TASK_SETTINGS = {
     # Верификация ответов - требует высокой точности

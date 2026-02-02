@@ -33,52 +33,14 @@ class TelegramBot:
         # Регистрируем обработчик функционала (вопрос 18)
         self.dp.callback_query.register(self.handle_functionality_callback, F.data.startswith("func_"))
         
-        # Регистрируем обработчик выбора LLM
-        self.dp.callback_query.register(self.handle_llm_selection, F.data.startswith("llm_"))
-        
         # Регистрируем обработчик кнопки "Начать интервью"
         self.dp.callback_query.register(self.handle_start_interview, F.data == "start_interview")
     
     async def start_command(self, message: Message):
         """Начать опрос"""
         user_id = message.from_user.id
-        
-        # Всегда показываем выбор LLM при старте
-        await self.show_llm_selection(message, user_id)
-    
-    async def show_llm_selection(self, message: Message, user_id: int):
-        """Показать выбор LLM пользователю"""
-        text = """🤖 Выберите AI помощника для обработки ваших ответов:
-
-🇺🇸 **GPT-5** - OpenAI GPT-5 Chat Latest"""
-# 🇷🇺 **GigaChat** - российская разработка Сбера
-        
-        # Создаем кнопки выбора
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            # [InlineKeyboardButton(text="🇷🇺 GigaChat", callback_data="llm_gigachat")],
-            [InlineKeyboardButton(text="🇺🇸 GPT-5", callback_data="llm_openai")]
-        ])
-        
-        await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
-    
-    async def handle_llm_selection(self, callback_query: CallbackQuery):
-        """Обработка выбора LLM"""
-        user_id = callback_query.from_user.id
-        llm_type = callback_query.data.split('_')[1]  # llm_gigachat -> gigachat
-        
-        # Убираем кнопки выбора
-        service = LLMFactory.create_service(llm_type)
-        selected_text = f"✅ Выбран AI помощник: {service.emoji} **{service.name}**"
-        
-        try:
-            await callback_query.message.edit_text(text=selected_text, reply_markup=None, parse_mode="Markdown")
-        except Exception as e:
-            print(f"⚠️ Не удалось отредактировать сообщение: {e}")
-        
-        await callback_query.answer(f"Выбран {service.name}!")
-        
-        # Начинаем опрос с выбранным LLM
-        await self.start_survey_with_llm(callback_query.message, user_id, llm_type)
+        # В этой версии используем только GigaChat
+        await self.start_survey_with_llm(message, user_id, "gigachat")
     
     async def handle_start_interview(self, callback_query: CallbackQuery):
         """Обработка нажатия кнопки 'Начать интервью'"""

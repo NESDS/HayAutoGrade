@@ -10,8 +10,6 @@ from typing import List, Dict
 
 from config import (
     GIGACHAT_AUTH, GIGACHAT_SCOPE, GIGACHAT_API_URL, GIGACHAT_TOKEN_URL, GIGACHAT_MODEL,
-    OPENAI_API_KEY, OPENAI_MODEL, OPENAI_API_URL,
-    OPENAI_USE_PROXY, OPENAI_PROXY_HOST, OPENAI_PROXY_PORT, OPENAI_PROXY_USER, OPENAI_PROXY_PASSWORD,
     LLM_TASK_SETTINGS
 )
 
@@ -105,64 +103,11 @@ class GigaChatService(BaseLLMService):
             print(f"❌ Ошибка GigaChat API: {e}")
             return "Извините, произошла ошибка при обработке запроса GigaChat. Попробуйте позже."
 
-class OpenAIService(BaseLLMService):
-    """Сервис для работы с OpenAI GPT"""
-    
-    @property
-    def name(self) -> str:
-        return "GPT-5"
-    
-    @property
-    def emoji(self) -> str:
-        return "🇺🇸"
-    
-    def generate_response(self, messages: List[Dict], task_type: str = 'verification') -> str:
-        """Генерация ответа через OpenAI API"""
-        try:
-            # Получаем настройки для типа задачи
-            settings = LLM_TASK_SETTINGS.get(task_type, LLM_TASK_SETTINGS['verification'])
-            
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {OPENAI_API_KEY}'
-            }
-            
-            payload = {
-                "model": OPENAI_MODEL,
-                "messages": messages,
-                "temperature": settings['temperature'],
-                "max_tokens": settings['max_tokens']
-            }
-            
-            # Настраиваем прокси, если включено
-            proxies = None
-            if OPENAI_USE_PROXY and OPENAI_PROXY_HOST and OPENAI_PROXY_PORT:
-                proxy_url = f"http://{OPENAI_PROXY_USER}:{OPENAI_PROXY_PASSWORD}@{OPENAI_PROXY_HOST}:{OPENAI_PROXY_PORT}"
-                proxies = {
-                    "http": proxy_url,
-                    "https": proxy_url
-                }
-                print(f"🌐 OpenAI: Используется прокси {OPENAI_PROXY_HOST}:{OPENAI_PROXY_PORT}")
-            
-            response = requests.post(OPENAI_API_URL, headers=headers, json=payload, proxies=proxies, timeout=60)
-            response.raise_for_status()
-            
-            response_json = response.json()
-            if 'choices' not in response_json or not response_json['choices']:
-                raise Exception(f"Некорректный ответ API: {response_json}")
-                
-            return response_json['choices'][0]['message']['content']
-            
-        except Exception as e:
-            print(f"❌ Ошибка OpenAI API: {e}")
-            return "Извините, произошла ошибка при обработке запроса GPT-5. Попробуйте позже."
-
 class LLMFactory:
     """Фабрика для создания LLM сервисов"""
     
     _services = {
-        'gigachat': GigaChatService,
-        'openai': OpenAIService
+        'gigachat': GigaChatService
     }
     
     @classmethod
