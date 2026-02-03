@@ -632,12 +632,10 @@ def generate_and_send_report(peer, user_id: int, session_id: int) -> None:
 # ============================================================
 
 def handle_interactive(update) -> None:
-    """Обработка нажатий интерактивных кнопок (UpdateSeqUpdate)"""
+    """Обработка нажатий интерактивных кнопок (UpdateInteractiveMediaEvent)"""
     try:
-        # Извлекаем событие из update
-        event = update.update_interactive_media_event
-        if not event:
-            return
+        # update уже является UpdateInteractiveMediaEvent (библиотека передаёт oneof_type())
+        event = update
         
         # Получаем ID кнопки и данные
         callback_id = event.id
