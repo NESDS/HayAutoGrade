@@ -452,24 +452,28 @@ class TelegramBot:
             recipient_chat_id = message.chat.id
             
             # HTML
-                    html_document = FSInputFile(report_path)
-                    await self.bot.send_document(
+            html_document = FSInputFile(report_path)
+            await self.bot.send_document(
                 chat_id=recipient_chat_id,
-                        document=html_document,
-                caption=f"📊 HTML отчет\n"
-                               f"📅 Дата: {self._get_current_datetime()}\n"
-                               f"🔢 Сессия: {session_id}"
-                    )
+                document=html_document,
+                caption=(
+                    "📊 HTML отчет\n"
+                    f"📅 Дата: {self._get_current_datetime()}\n"
+                    f"🔢 Сессия: {session_id}"
+                ),
+            )
                     
             # XLSX
-                    xlsx_document = FSInputFile(xlsx_report_path)
-                    await self.bot.send_document(
+            xlsx_document = FSInputFile(xlsx_report_path)
+            await self.bot.send_document(
                 chat_id=recipient_chat_id,
-                        document=xlsx_document,
-                caption=f"📊 Excel отчет\n"
-                               f"📅 Дата: {self._get_current_datetime()}\n"
-                               f"🔢 Сессия: {session_id}"
-                    )
+                document=xlsx_document,
+                caption=(
+                    "📊 Excel отчет\n"
+                    f"📅 Дата: {self._get_current_datetime()}\n"
+                    f"🔢 Сессия: {session_id}"
+                ),
+            )
                     
             print(f"✅ Отчеты отправлены пользователю в чат {recipient_chat_id}")
             await message.answer("🎉 Интервьюирование завершено. Спасибо!", reply_markup=ReplyKeyboardRemove())
