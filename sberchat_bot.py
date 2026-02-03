@@ -9,8 +9,6 @@
 
 import logging
 import os
-import importlib
-import importlib.util
 from typing import Dict, List, Optional
 from datetime import datetime
 
@@ -18,37 +16,15 @@ from datetime import datetime
 SBERCHAT_AVAILABLE = False
 
 try:
-    # Шим: устраняем конфликт имён между пакетом dialog_bot_sdk.utils (папка)
-    # и модулем dialog_bot_sdk/utils.py (файл)
-    try:
-        pkg = importlib.import_module("dialog_bot_sdk.utils")
-        import dialog_bot_sdk as _dbs
-        base_dir = os.path.dirname(_dbs.__file__)
-        utils_py_path = os.path.join(base_dir, "utils.py")
-        if os.path.isfile(utils_py_path):
-            spec = importlib.util.spec_from_file_location("dialog_bot_sdk._utils_file", utils_py_path)
-            if spec and spec.loader:
-                _utils_file = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(_utils_file)
-                for name in dir(_utils_file):
-                    if name.startswith("_"):
-                        continue
-                    try:
-                        value = getattr(_utils_file, name)
-                    except Exception:
-                        continue
-                    if not hasattr(pkg, name):
-                        setattr(pkg, name, value)
-    except Exception:
-        pass
-
     from dialog_bot_sdk.bot import DialogBot
     from dialog_bot_sdk.entities.messaging import (
-        UpdateMessage, CommandHandler, MessageHandler, MessageContentType
+        UpdateMessage, CommandHandler, MessageHandler, MessageContentType,
+        InteractiveMediaSelectOption, UpdateInteractiveMediaEvent
     )
-    from dialog_bot_sdk.entities.media import (
+    from dialog_bot_sdk.entities.sequence_and_updates import UpdateHandler, UpdateType
+    from dialog_bot_sdk.interactive_media import (
         InteractiveMediaGroup, InteractiveMedia, InteractiveMediaButton,
-        InteractiveMediaSelect, InteractiveMediaSelectOption, InteractiveMediaStyle
+        InteractiveMediaSelect, InteractiveMediaStyle
     )
     SBERCHAT_AVAILABLE = True
 except ImportError:
@@ -64,6 +40,9 @@ except ImportError:
     InteractiveMediaSelect = None
     InteractiveMediaSelectOption = None
     InteractiveMediaStyle = None
+    UpdateInteractiveMediaEvent = None
+    UpdateHandler = None
+    UpdateType = None
 
 from database import Database
 from config import SBERCHAT_TOKEN, SBERCHAT_ENDPOINT, SBERCHAT_IS_SECURE, SBERCHAT_ROOT_CERT
@@ -205,7 +184,7 @@ def start_survey_with_llm(message: UpdateMessage, user_id: int, llm_type: str) -
         [InteractiveMedia(
             "start_interview",
             InteractiveMediaButton("start_interview", "🚀 Начать интервью"),
-            InteractiveMediaStyle.PRIMARY
+            InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_PRIMARY
         )]
     )
     
@@ -226,7 +205,7 @@ def send_question(peer, question_id: int, user_id: int) -> None:
             buttons.append(InteractiveMedia(
                 f"answer_{question_id}_{i}",
                 InteractiveMediaButton(f"answer_{question_id}_{i}", opt[:60]),  # Ограничение длины
-                InteractiveMediaStyle.DEFAULT
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
             ))
         
         button_group = InteractiveMediaGroup(buttons)
@@ -305,12 +284,12 @@ def send_adaptive_question_11(peer, user_id: int, session_id: int) -> None:
                 InteractiveMedia(
                     f"q11_accept_{variants[0]['answer_value']}",
                     InteractiveMediaButton(f"q11_accept_{variants[0]['answer_value']}", f"✅ Вариант {variants[0]['answer_value']}"),
-                    InteractiveMediaStyle.PRIMARY
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_PRIMARY
                 ),
                 InteractiveMedia(
                     "restart_from_q8",
                     InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                    InteractiveMediaStyle.DEFAULT
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
                 )
             ]
         else:
@@ -328,12 +307,12 @@ def send_adaptive_question_11(peer, user_id: int, session_id: int) -> None:
                 buttons.append(InteractiveMedia(
                     f"q11_select_{variant['answer_value']}",
                     InteractiveMediaButton(f"q11_select_{variant['answer_value']}", f"{variant['answer_value']}"),
-                    InteractiveMediaStyle.DEFAULT
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
                 ))
             buttons.append(InteractiveMedia(
                 "restart_from_q8",
                 InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                InteractiveMediaStyle.DEFAULT
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
             ))
         
         button_group = InteractiveMediaGroup(buttons)
@@ -402,12 +381,12 @@ def send_adaptive_question_12(peer, user_id: int, session_id: int) -> None:
                 InteractiveMedia(
                     f"q12_accept_{variants[0]['answer_value']}",
                     InteractiveMediaButton(f"q12_accept_{variants[0]['answer_value']}", f"✅ Вариант {variants[0]['answer_value']}"),
-                    InteractiveMediaStyle.PRIMARY
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_PRIMARY
                 ),
                 InteractiveMedia(
                     "restart_from_q8",
                     InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                    InteractiveMediaStyle.DEFAULT
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
                 )
             ]
         else:
@@ -425,12 +404,12 @@ def send_adaptive_question_12(peer, user_id: int, session_id: int) -> None:
                 buttons.append(InteractiveMedia(
                     f"q12_select_{variant['answer_value']}",
                     InteractiveMediaButton(f"q12_select_{variant['answer_value']}", f"{variant['answer_value']}"),
-                    InteractiveMediaStyle.DEFAULT
+                    InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
                 ))
             buttons.append(InteractiveMedia(
                 "restart_from_q8",
                 InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                InteractiveMediaStyle.DEFAULT
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
             ))
         
         button_group = InteractiveMediaGroup(buttons)
@@ -482,7 +461,7 @@ def send_adaptive_question_18(peer, user_id: int, session_id: int) -> None:
             InteractiveMedia(
                 "func_accept_18",
                 InteractiveMediaButton("func_accept_18", "✅ Принять как есть"),
-                InteractiveMediaStyle.PRIMARY
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_PRIMARY
             )
         ])
         
@@ -524,7 +503,7 @@ def show_missing_p1_options(peer, user_id: int, session_id: int) -> None:
             InteractiveMedia(
                 "restart_from_q8",
                 InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                InteractiveMediaStyle.DEFAULT
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
             )
         ])
         
@@ -536,7 +515,7 @@ def show_missing_p1_options(peer, user_id: int, session_id: int) -> None:
             InteractiveMedia(
                 "restart_from_q8",
                 InteractiveMediaButton("restart_from_q8", "🔄 Переответить с 8-го вопроса"),
-                InteractiveMediaStyle.DEFAULT
+                InteractiveMediaStyle.INTERACTIVEMEDIASTYLE_DEFAULT
             )
         ])
         bot.messaging.send_message_sync(
@@ -652,16 +631,18 @@ def generate_and_send_report(peer, user_id: int, session_id: int) -> None:
 # Обработка callback-ов (нажатий кнопок)
 # ============================================================
 
-def handle_interactive(message: UpdateMessage) -> None:
-    """Обработка нажатий интерактивных кнопок"""
+def handle_interactive(update) -> None:
+    """Обработка нажатий интерактивных кнопок (UpdateSeqUpdate)"""
     try:
-        # Получаем ID кнопки
-        if not message.message or not message.message.interactive_media_confirm:
+        # Извлекаем событие из update
+        event = update.update_interactive_media_event
+        if not event:
             return
         
-        callback_id = message.message.interactive_media_confirm.id
-        user_id = message.sender_peer.id
-        peer = message.peer
+        # Получаем ID кнопки и данные
+        callback_id = event.id
+        user_id = event.peer.id
+        peer = event.peer
         
         print(f"🔘 Callback: {callback_id} от пользователя {user_id}")
         
@@ -776,7 +757,7 @@ def handle_interactive(message: UpdateMessage) -> None:
         
     except Exception as e:
         logging.exception(f"Ошибка обработки callback: {e}")
-        bot.messaging.send_message_sync(message.peer, "❌ Произошла ошибка при обработке.")
+        bot.messaging.send_message_sync(event.peer, "❌ Произошла ошибка при обработке.")
 
 
 def get_variant_text_by_value(question_num: int, answer_value: int, user_id: int, session_id: int) -> str:
@@ -991,9 +972,9 @@ def main():
         MessageHandler(handle_text, MessageContentType.TEXT_MESSAGE),
     ])
     
-    # Регистрируем обработчик интерактивных кнопок
-    bot.messaging.message_handler([
-        MessageHandler(handle_interactive, MessageContentType.INTERACTIVE_MEDIA_CONFIRM),
+    # Регистрируем обработчик интерактивных кнопок (через UpdateHandler)
+    bot.updates.update_handler([
+        UpdateHandler(handle_interactive, UpdateType.UPDATE_INTERACTIVE_MEDIA_EVENT),
     ])
     
     print("🤖 СберЧат бот HayAutoGrade запущен!")
